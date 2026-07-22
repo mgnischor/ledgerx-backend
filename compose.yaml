@@ -14,7 +14,7 @@ services:
             - "RABBITMQ_USER=ledgerx"
             - "RABBITMQ_PASSWORD=ledgerx"
         ports:
-            - "8080:8080"
+            - "25360:8080"
         depends_on:
             - postgres
             - rabbitmq
