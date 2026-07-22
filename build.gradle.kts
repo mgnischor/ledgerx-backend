@@ -23,23 +23,32 @@ extra["snippetsDir"] = file("build/generated-snippets")
 extra["springAiVersion"] = "2.0.0"
 
 dependencies {
+    annotationProcessor("org.projectlombok:lombok")
+
+    compileOnly("org.projectlombok:lombok")
+
+    developmentOnly("org.springframework.ai:spring-ai-spring-boot-docker-compose")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+
+    implementation("org.springframework.ai:spring-ai-starter-model-anthropic")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-ldap")
     implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
-    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-client")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-session-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
-    implementation("org.springframework.ai:spring-ai-starter-model-anthropic")
-    compileOnly("org.projectlombok:lombok")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+
     runtimeOnly("org.postgresql:postgresql")
-    developmentOnly("org.springframework.ai:spring-ai-spring-boot-docker-compose")
-    annotationProcessor("org.projectlombok:lombok")
+
+    testAnnotationProcessor("org.projectlombok:lombok")
+
+    testCompileOnly("org.projectlombok:lombok")
+
     testImplementation("org.springframework.boot:spring-boot-starter-amqp-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-jdbc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
@@ -52,9 +61,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-session-jdbc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
-    testCompileOnly("org.projectlombok:lombok")
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testAnnotationProcessor("org.projectlombok:lombok")
 }
 
 dependencyManagement {
