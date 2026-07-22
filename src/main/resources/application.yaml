@@ -1,3 +1,18 @@
 spring:
   application:
     name: ledgerx-backend
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ledgerx}
+    username: ${DB_USER:ledgerx}
+    password: ${DB_PASSWORD:ledgerx}
+  jpa:
+    hibernate:
+      ddl-auto: update
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:ledgerx}
+    password: ${RABBITMQ_PASSWORD:ledgerx}
+
+server:
+  port: ${SERVER_PORT:8080}
