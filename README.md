@@ -81,9 +81,40 @@ follows this internal layout:
 and `interfaces` layers, querying the `accounting` context's repositories
 directly.
 
+## Security standards
+
+- **Passwords** are hashed with **Argon2id** (`PasswordEncoderConfig`,
+  `shared/infrastructure/security`), which is provided as the `PasswordEncoder`
+  bean used by `identity`. If Argon2id cannot be used at runtime, the encoder
+  automatically falls back to **PBKDF2**. Encoded hashes are prefixed with
+  `{argon2id}`/`{pbkdf2}` so both formats can always be verified.
+- **Any other hash** (checksums, fingerprints, idempotency keys, etc.) must
+  use **SHA3-512**, via `Sha3512Hasher` (`shared/infrastructure/security`).
+  Do not use this for passwords — use the `PasswordEncoder` bean instead.
+
 ## Running locally
 
+### Gradle
+
 ```
-docker compose up -d   # Postgres, RabbitMQ, Grafana LGTM
+docker compose up -d postgres rabbitmq grafana-lgtm
 ./gradlew bootRun
 ```
+
+### Docker
+
+The `Dockerfile` builds a self-contained runtime image (multi-stage,
+`eclipse-temurin:25-jdk` → `eclipse-temurin:25-jre`, non-root user).
+
+```
+docker compose up -d --build
+```
+
+This starts the app together with Postgres, RabbitMQ and Grafana LGTM. The
+app container reads its datasource/RabbitMQ connection from environment
+variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`,
+`RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`), all
+defaulted in `compose.yaml`. The API is exposed on `http://localhost:8080`.
+
+`spring.jpa.hibernate.ddl-auto` is currently set to `update` as a stopgap
+until a migration tool (Flyway/Liquibase) is introduced.
