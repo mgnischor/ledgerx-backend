@@ -44,6 +44,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
 
+    runtimeOnly("org.bouncycastle:bcprov-jdk18on:1.79")
     runtimeOnly("org.postgresql:postgresql")
 
     testAnnotationProcessor("org.projectlombok:lombok")
