@@ -1,4 +1,23 @@
 services:
+    ledgerx-backend:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        environment:
+            - "DB_HOST=postgres"
+            - "DB_PORT=5432"
+            - "DB_NAME=ledgerx"
+            - "DB_USER=ledgerx"
+            - "DB_PASSWORD=ledgerx"
+            - "RABBITMQ_HOST=rabbitmq"
+            - "RABBITMQ_PORT=5672"
+            - "RABBITMQ_USER=ledgerx"
+            - "RABBITMQ_PASSWORD=ledgerx"
+        ports:
+            - "8080:8080"
+        depends_on:
+            - postgres
+            - rabbitmq
     grafana-lgtm:
         image: "grafana/otel-lgtm:latest"
         ports:
