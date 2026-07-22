@@ -1,0 +1,12 @@
+.git
+.gradle
+.gradle-wrapper-cache
+build
+bin
+out
+workspace
+*.md
+Dockerfile
+.dockerignore
+.editorconfig
+.prettierrc
