@@ -41,6 +41,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Populates the database with realistic pt-BR sample data the first time the application starts
@@ -100,6 +101,7 @@ public class DatabaseSeeder implements ApplicationRunner {
     }
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) {
         if (companyRepository.count() > 0) {
             log.info("Database already contains data, skipping seed");
@@ -233,18 +235,15 @@ public class DatabaseSeeder implements ApplicationRunner {
                     && amount.amount().compareTo(account.getBalance().amount()) > 0) {
                 // Not enough balance for this random expense: prefer switching to an income
                 // category from the same company so the transaction type and the actual balance
-                // movement always agree; if none exists, fall back to a small, affordable amount.
+                // movement always agree; if none exists, skip this transaction rather than risk
+                // an unsafe clamp when the balance is at or near zero.
                 var incomeCategory = categories.stream()
                         .filter(candidate -> candidate.getType() == TransactionType.INCOME)
                         .findAny();
-                if (incomeCategory.isPresent()) {
-                    category = incomeCategory.get();
-                } else {
-                    amount = Money.brl(account.getBalance().amount()
-                            .multiply(BigDecimal.valueOf(0.5))
-                            .max(BigDecimal.valueOf(0.01))
-                            .setScale(2, RoundingMode.HALF_EVEN));
+                if (incomeCategory.isEmpty()) {
+                    continue;
                 }
+                category = incomeCategory.get();
             }
 
             if (category.getType() == TransactionType.EXPENSE) {
