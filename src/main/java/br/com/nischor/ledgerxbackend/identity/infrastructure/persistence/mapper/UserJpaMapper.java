@@ -19,7 +19,8 @@ public class UserJpaMapper {
     }
 
     public UserJpaEntity toEntity(User user) {
-        var entity = new UserJpaEntity(user.getFullName(), user.getEmail().value(), user.getHashedPassword());
+        var entity = new UserJpaEntity(user.getId(), user.getFullName(), user.getEmail().value(),
+                user.getHashedPassword());
         entity.getRoles().addAll(user.getRoles());
         entity.setActive(user.isActive());
         return entity;
