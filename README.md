@@ -137,6 +137,17 @@ docker compose up -d postgres rabbitmq grafana-lgtm
 ./gradlew bootRun
 ```
 
+`./gradlew build` and `./gradlew test` also need Postgres and RabbitMQ
+running first: `LedgerxBackendApplicationTests.contextLoads()` boots the
+full Spring context (real datasource, JDBC session-schema initializer,
+AMQP topology), and there is no test profile with an embedded/in-memory
+database. Start the dependencies with the command above before running
+either task, or skip tests for a pure compile:
+
+```
+./gradlew build -x test
+```
+
 ### Docker
 
 The `Dockerfile` builds a self-contained runtime image (multi-stage,
