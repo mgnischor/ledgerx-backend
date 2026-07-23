@@ -22,7 +22,7 @@ public class CompanyJpaMapper {
         var address = company.getAddress();
         var embeddable = new AddressEmbeddable(address.street(), address.number(), address.city(), address.state(),
                 address.zipCode(), address.country());
-        return new CompanyJpaEntity(company.getLegalName(), company.getTradeName(), company.getCnpj().value(),
-                company.getSize(), embeddable);
+        return new CompanyJpaEntity(company.getId(), company.getLegalName(), company.getTradeName(),
+                company.getCnpj().value(), company.getSize(), embeddable);
     }
 }
