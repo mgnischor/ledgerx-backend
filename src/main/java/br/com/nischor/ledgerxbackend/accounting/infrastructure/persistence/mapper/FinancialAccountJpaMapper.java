@@ -11,11 +11,17 @@ public class FinancialAccountJpaMapper {
 
     public FinancialAccount toDomain(FinancialAccountJpaEntity entity) {
         var balance = new Money(entity.getBalance(), Currency.getInstance(entity.getCurrencyCode()));
-        return new FinancialAccount(entity.getId(), entity.getCompanyId(), entity.getName(), balance);
+        var account = new FinancialAccount(entity.getId(), entity.getCompanyId(), entity.getName(), balance);
+        if (!entity.isActive()) {
+            account.deactivate();
+        }
+        return account;
     }
 
     public FinancialAccountJpaEntity toEntity(FinancialAccount account) {
-        return new FinancialAccountJpaEntity(account.getId(), account.getCompanyId(), account.getName(),
+        var entity = new FinancialAccountJpaEntity(account.getId(), account.getCompanyId(), account.getName(),
                 account.getBalance().amount(), account.getBalance().currency().getCurrencyCode());
+        entity.setActive(account.isActive());
+        return entity;
     }
 }
