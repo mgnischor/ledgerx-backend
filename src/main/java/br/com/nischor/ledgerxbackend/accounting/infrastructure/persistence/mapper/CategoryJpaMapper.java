@@ -12,6 +12,7 @@ public class CategoryJpaMapper {
     }
 
     public CategoryJpaEntity toEntity(Category category) {
-        return new CategoryJpaEntity(category.getCompanyId(), category.getName(), category.getType());
+        return new CategoryJpaEntity(category.getId(), category.getCompanyId(), category.getName(),
+                category.getType());
     }
 }
