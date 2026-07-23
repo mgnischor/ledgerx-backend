@@ -19,3 +19,26 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+
+ledgerx:
+  security:
+    jwt:
+      issuer: ${JWT_ISSUER:ledgerx-backend}
+      expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}
+      # Base64-encoded DER keys (PKCS#8 private key / X.509 public key). Leave blank to have an
+      # ephemeral Ed25519 key pair generated at startup (development only; see JwtKeyConfig).
+      private-key: ${JWT_PRIVATE_KEY:}
+      public-key: ${JWT_PUBLIC_KEY:}
+    oauth2:
+      # First-party Authorization Code + PKCE flow served at /oauth2/*. See AuthorizationServerConfig.
+      issuer: ${OAUTH2_ISSUER:https://localhost:${server.port:8080}}
+      client-id: ${OAUTH2_CLIENT_ID:ledgerx-spa}
+      redirect-uris: ${OAUTH2_REDIRECT_URIS:http://127.0.0.1:8080/authorized}
+      scopes: ${OAUTH2_SCOPES:api.read,api.write}
+      access-token-ttl-seconds: ${OAUTH2_ACCESS_TOKEN_TTL_SECONDS:900}
+      refresh-token-ttl-seconds: ${OAUTH2_REFRESH_TOKEN_TTL_SECONDS:86400}
+    tls:
+      # Set to false behind a TLS-terminating reverse proxy, or set server.ssl.key-store to use a
+      # real certificate instead of the self-signed one generated fresh on every startup.
+      enabled: ${TLS_ENABLED:true}
+      common-name: ${TLS_COMMON_NAME:localhost}
