@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public record EmailAddress(String value) implements Serializable {
 
-    private static final Pattern PATTERN = Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
+    private static final Pattern PATTERN = Pattern.compile("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)*\\.[a-zA-Z]{2,}$");
 
     public EmailAddress {
         if (value == null || !PATTERN.matcher(value).matches()) {
