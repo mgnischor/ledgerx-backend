@@ -36,9 +36,10 @@ implements the ports declared in `domain`.
 | Shared     | `shared`     | Cross-cutting kernel: value objects (`Money`, `DocumentNumber`, `EmailAddress`), base exceptions, domain events, base JPA entities, global error handling |
 | Identity   | `identity`   | Users, roles and authentication                                                                                                                           |
 | Company    | `company`    | Company/tenant registration and profile                                                                                                                   |
-| Accounting | `accounting` | Financial accounts, categories, income/expense/transfer transactions                                                                                      |
+| Accounting | `accounting` | Financial accounts, categories, income/expense/transfer transactions, budgets, recurring transactions |
 | Billing    | `billing`    | Customers/suppliers, invoices and installments (accounts receivable/payable)                                                                              |
 | Reporting  | `reporting`  | Read-side queries such as the cash-flow summary                                                                                                           |
+| Notification | `notification` | In-app notification feed populated from domain events published over RabbitMQ                                                                        |
 
 ```
 src/main/java/br/com/nischor/ledgerxbackend/
@@ -47,7 +48,8 @@ src/main/java/br/com/nischor/ledgerxbackend/
 ├── company/
 ├── accounting/
 ├── billing/
-└── reporting/
+├── reporting/
+└── notification/
 ```
 
 Each business context (`identity`, `company`, `accounting`, `billing`)
@@ -83,10 +85,76 @@ directly.
 
 ## Business rules
 
-The API enforces 100 documented business rules (validation, uniqueness,
+The API enforces 118 documented business rules (validation, uniqueness,
 state transitions, invariants) across every context. See
 [BUSINESS_RULES.md](BUSINESS_RULES.md) for the full catalog, each rule
 cross-referenced from the controller that enforces it.
+
+## API endpoints
+
+All endpoints are versioned under `/api/v1`. See
+[BUSINESS_RULES.md](BUSINESS_RULES.md) or Swagger UI for the validation and
+business rules each one enforces.
+
+### Identity — `/api/v1/users`
+
+| Method | Path | Description |
+| ------ | ---- | ------------ |
+| POST | `/api/v1/users` | Register a new user |
+| PATCH | `/api/v1/users/{userId}/roles` | Grant a role to a user |
+| PATCH | `/api/v1/users/{userId}/deactivate` | Deactivate a user |
+
+### Company — `/api/v1/companies`
+
+| Method | Path | Description |
+| ------ | ---- | ------------ |
+| POST | `/api/v1/companies` | Register a new company |
+| PATCH | `/api/v1/companies/{companyId}/deactivate` | Deactivate a company |
+
+### Accounting — financial accounts, categories, transactions, transfers, budgets, recurring transactions
+
+| Method | Path | Description |
+| ------ | ---- | ------------ |
+| POST | `/api/v1/companies/{companyId}/financial-accounts` | Create a financial account |
+| GET | `/api/v1/companies/{companyId}/financial-accounts` | List financial accounts of a company |
+| GET | `/api/v1/companies/{companyId}/financial-accounts/{accountId}` | Get a financial account by id |
+| PATCH | `/api/v1/companies/{companyId}/financial-accounts/{accountId}/deactivate` | Deactivate a financial account |
+| POST | `/api/v1/companies/{companyId}/categories` | Create an income/expense category |
+| GET | `/api/v1/companies/{companyId}/categories` | List categories of a company |
+| POST | `/api/v1/transactions` | Record an income or expense transaction |
+| POST | `/api/v1/transfers` | Transfer funds between two financial accounts |
+| POST | `/api/v1/companies/{companyId}/budgets` | Create a monthly budget for an expense category |
+| GET | `/api/v1/companies/{companyId}/budgets` | List budgets of a company |
+| GET | `/api/v1/companies/{companyId}/budgets/{budgetId}/status` | Get spent/remaining amount for a budget |
+| PATCH | `/api/v1/companies/{companyId}/budgets/{budgetId}/deactivate` | Deactivate a budget |
+| POST | `/api/v1/companies/{companyId}/recurring-transactions` | Create a recurring transaction rule |
+| GET | `/api/v1/companies/{companyId}/recurring-transactions` | List recurring transaction rules of a company |
+| POST | `/api/v1/companies/{companyId}/recurring-transactions/generate-due` | Materialize every rule that is currently due into real transactions |
+| PATCH | `/api/v1/companies/{companyId}/recurring-transactions/{ruleId}/deactivate` | Deactivate a recurring transaction rule |
+
+### Billing — parties, invoices
+
+| Method | Path | Description |
+| ------ | ---- | ------------ |
+| POST | `/api/v1/companies/{companyId}/parties` | Create a customer/supplier party |
+| GET | `/api/v1/companies/{companyId}/parties` | List parties of a company |
+| POST | `/api/v1/invoices` | Issue an invoice with installments |
+| GET | `/api/v1/invoices/{invoiceId}` | Get an invoice by id |
+| PATCH | `/api/v1/invoices/{invoiceId}/payments` | Register a payment against an installment |
+| PATCH | `/api/v1/invoices/{invoiceId}/cancel` | Cancel an invoice |
+
+### Reporting — `/api/v1/companies/{id}/reports`
+
+| Method | Path | Description |
+| ------ | ---- | ------------ |
+| GET | `/api/v1/companies/{companyId}/reports/cash-flow` | Cash-flow summary (income, expense, net result) for a date range |
+
+### Notifications — `/api/v1/notifications`
+
+| Method | Path | Description |
+| ------ | ---- | ------------ |
+| GET | `/api/v1/notifications` | List notifications, most recent first (`?unreadOnly=true` to filter) |
+| PATCH | `/api/v1/notifications/{notificationId}/read` | Mark a notification as read |
 
 ## API documentation (OpenAPI / Swagger)
 
