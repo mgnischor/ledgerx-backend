@@ -1,15 +1,15 @@
 package br.com.nischor.ledgerxbackend.shared.infrastructure.messaging;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Declares the AMQP topology backing domain event messaging: one durable topic exchange with one
@@ -69,10 +69,12 @@ public class RabbitMqConfig {
     /**
      * Registered as the sole {@link MessageConverter} bean so Spring Boot's auto-configured
      * {@code RabbitTemplate} and {@code @RabbitListener} containers both pick it up automatically,
-     * exchanging JSON instead of Java serialization.
+     * exchanging JSON instead of Java serialization. Spring Boot 4 / Spring Framework 7 default to
+     * Jackson 3, so this takes the auto-configured {@link JsonMapper} rather than a classic
+     * Jackson 2 {@code ObjectMapper}.
      */
     @Bean
-    public MessageConverter messageConverter(ObjectMapper objectMapper) {
-        return new Jackson2JsonMessageConverter(objectMapper);
+    public MessageConverter messageConverter(JsonMapper jsonMapper) {
+        return new JacksonJsonMessageConverter(jsonMapper);
     }
 }
