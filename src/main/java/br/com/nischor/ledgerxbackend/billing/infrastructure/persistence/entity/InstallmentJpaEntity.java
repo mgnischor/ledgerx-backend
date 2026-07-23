@@ -7,6 +7,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Table(name = "installments")
@@ -32,7 +33,9 @@ public class InstallmentJpaEntity extends BaseEntity {
     protected InstallmentJpaEntity() {
     }
 
-    public InstallmentJpaEntity(InvoiceJpaEntity invoice, int number, BigDecimal amount, LocalDate dueDate) {
+    public InstallmentJpaEntity(UUID id, InvoiceJpaEntity invoice, int number, BigDecimal amount,
+            LocalDate dueDate) {
+        super(id);
         this.invoice = invoice;
         this.number = number;
         this.amount = amount;
