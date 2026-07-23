@@ -71,6 +71,10 @@ public class CompanyJpaEntity extends AuditableEntity {
         return active;
     }
 
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @Embeddable
     public static class AddressEmbeddable {
 
