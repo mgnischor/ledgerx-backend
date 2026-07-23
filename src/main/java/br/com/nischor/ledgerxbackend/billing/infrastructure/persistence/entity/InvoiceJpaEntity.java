@@ -38,7 +38,8 @@ public class InvoiceJpaEntity extends AuditableEntity {
     protected InvoiceJpaEntity() {
     }
 
-    public InvoiceJpaEntity(UUID companyId, UUID partyId, PartyType direction) {
+    public InvoiceJpaEntity(UUID id, UUID companyId, UUID partyId, PartyType direction) {
+        super(id);
         this.companyId = companyId;
         this.partyId = partyId;
         this.direction = direction;
