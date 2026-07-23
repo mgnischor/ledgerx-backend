@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.util.UUID;
 
 @Entity
 @Table(name = "companies")
@@ -36,8 +37,9 @@ public class CompanyJpaEntity extends AuditableEntity {
     protected CompanyJpaEntity() {
     }
 
-    public CompanyJpaEntity(String legalName, String tradeName, String cnpj, CompanySize size,
+    public CompanyJpaEntity(UUID id, String legalName, String tradeName, String cnpj, CompanySize size,
             AddressEmbeddable address) {
+        super(id);
         this.legalName = legalName;
         this.tradeName = tradeName;
         this.cnpj = cnpj;
