@@ -18,7 +18,7 @@ public class PartyJpaMapper {
     }
 
     public PartyJpaEntity toEntity(Party party) {
-        return new PartyJpaEntity(party.getCompanyId(), party.getName(), party.getDocument().value(),
+        return new PartyJpaEntity(party.getId(), party.getCompanyId(), party.getName(), party.getDocument().value(),
                 party.getEmail().value(), party.getType());
     }
 }
