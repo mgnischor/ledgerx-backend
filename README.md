@@ -164,9 +164,50 @@ Every endpoint is documented with springdoc-openapi:
 - Raw OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
 Both paths are explicitly permitted by `SecurityConfig` so they can be
-browsed without authentication. No authentication provider is wired up for
-the rest of the API yet (see "Known gaps" in
+browsed without authentication.
+
+## Authentication
+
+Two independent authentication mechanisms are available:
+
+- **Password login (`POST /api/v1/auth/login`)** — exchanges an email/password
+  for an **Ed25519-signed (EdDSA)** JWT access token (`AuthController`,
+  `LoginUseCase`, `JwtService` in `shared/infrastructure/security`). Send it
+  back as `Authorization: Bearer <token>`; `JwtAuthenticationFilter` verifies
+  the signature and populates roles as granted authorities on every request.
+  The signing key pair is configured via `ledgerx.security.jwt.private-key`
+  /`public-key` (Base64 DER); if left unset, a fresh key pair is generated at
+  startup, which only works for a single, long-lived instance.
+- **OAuth2 Authorization Code + PKCE (`/oauth2/authorize`, `/oauth2/token`,
+  `/oauth2/jwks`, ...)** — a first-party Spring Authorization Server
+  (`AuthorizationServerConfig`) for public clients (SPA/mobile) that cannot
+  keep a client secret. PKCE is mandatory
+  (`ClientSettings.requireProofKey(true)`); the registered client uses
+  `client_authentication_method=none`. Configure the client id, redirect
+  URIs and scopes under `ledgerx.security.oauth2.*`. These tokens are signed
+  with a separate, ephemeral RSA key (regenerated every startup) and are
+  unrelated to the Ed25519 JWTs above.
+
+Neither mechanism is wired up for authorization (which roles/scopes can do
+what) beyond authentication itself yet (see "Known gaps" in
 [BUSINESS_RULES.md](BUSINESS_RULES.md)).
+
+## TLS
+
+The embedded server serves **HTTPS only**, restricted to **TLS 1.3 with a
+TLS 1.2 fallback** (`server.ssl.enabled-protocols`). On every startup,
+`TlsEnvironmentPostProcessor` generates a fresh self-signed RSA certificate
+(`SelfSignedCertificateGenerator`, built on BouncyCastle) into a temporary
+PKCS#12 keystore and wires it into `server.ssl.*` before the embedded Tomcat
+factory reads those properties — no certificate needs to be provisioned
+up front for local development.
+
+Since the certificate is regenerated (and its keystore password rotated) on
+every restart, it is **not suitable for production** or for any client that
+needs to trust the certificate across restarts: set `server.ssl.key-store`
+(and related `server.ssl.*` properties) explicitly to use a real certificate,
+or set `ledgerx.security.tls.enabled=false` to disable TLS entirely (e.g.
+behind a TLS-terminating reverse proxy/load balancer).
 
 ## Sample data seeding
 
