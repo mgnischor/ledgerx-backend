@@ -42,6 +42,9 @@ public class Invoice {
     }
 
     public void cancel() {
+        if (status == InvoiceStatus.PAID) {
+            throw new BusinessRuleViolationException("A fully paid invoice cannot be canceled");
+        }
         this.status = InvoiceStatus.CANCELED;
     }
 
