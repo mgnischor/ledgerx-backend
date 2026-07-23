@@ -82,7 +82,7 @@ public class DatabaseSeeder implements ApplicationRunner {
     private final TransactionRepository transactionRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private final Faker faker = new Faker(new Locale("pt", "BR"));
+    private final Faker faker = new Faker(Locale.of("pt", "BR"));
     private final Random random = new Random();
 
     public DatabaseSeeder(CompanyRepository companyRepository, UserRepository userRepository,
