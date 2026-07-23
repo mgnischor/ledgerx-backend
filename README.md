@@ -81,6 +81,42 @@ follows this internal layout:
 and `interfaces` layers, querying the `accounting` context's repositories
 directly.
 
+## Business rules
+
+The API enforces 100 documented business rules (validation, uniqueness,
+state transitions, invariants) across every context. See
+[BUSINESS_RULES.md](BUSINESS_RULES.md) for the full catalog, each rule
+cross-referenced from the controller that enforces it.
+
+## API documentation (OpenAPI / Swagger)
+
+Every endpoint is documented with springdoc-openapi:
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- Raw OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+Both paths are explicitly permitted by `SecurityConfig` so they can be
+browsed without authentication. No authentication provider is wired up for
+the rest of the API yet (see "Known gaps" in
+[BUSINESS_RULES.md](BUSINESS_RULES.md)).
+
+## Sample data seeding
+
+On first startup against an empty database, `DatabaseSeeder`
+(`shared/infrastructure/seed`) populates ~5000 realistic pt-BR records
+(companies, users, financial accounts, categories, parties, invoices,
+transactions) using [Datafaker](https://www.datafaker.net/) with the
+`pt_BR` locale. CPF/CNPJ values are generated with valid check digits.
+
+The whole seed runs in a single transaction, so a failure midway leaves the
+database untouched instead of a partially-seeded state. Disable it with:
+
+```yaml
+ledgerx:
+  seed:
+    enabled: false
+```
+
 ## Security standards
 
 - **Passwords** are hashed with **Argon2id** (`PasswordEncoderConfig`,
@@ -117,4 +153,6 @@ variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`,
 defaulted in `compose.yaml`. The API is exposed on `http://localhost:8080`.
 
 `spring.jpa.hibernate.ddl-auto` is currently set to `update` as a stopgap
-until a migration tool (Flyway/Liquibase) is introduced.
+until a migration tool (Flyway/Liquibase) is introduced. `spring.session.jdbc.initialize-schema`
+is set to `always` so the `SPRING_SESSION` table (required by
+`spring-boot-starter-session-jdbc`) is created automatically.
