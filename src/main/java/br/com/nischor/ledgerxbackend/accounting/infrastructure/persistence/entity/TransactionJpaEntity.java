@@ -37,8 +37,9 @@ public class TransactionJpaEntity extends AuditableEntity {
     protected TransactionJpaEntity() {
     }
 
-    public TransactionJpaEntity(UUID financialAccountId, UUID categoryId, TransactionType type, BigDecimal amount,
-            String description, LocalDate occurredOn) {
+    public TransactionJpaEntity(UUID id, UUID financialAccountId, UUID categoryId, TransactionType type,
+            BigDecimal amount, String description, LocalDate occurredOn) {
+        super(id);
         this.financialAccountId = financialAccountId;
         this.categoryId = categoryId;
         this.type = type;
