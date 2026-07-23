@@ -134,6 +134,39 @@ violated), all as a structured `ApiError` body (see BR-092).
 | BR-089 | Only `INCOME` and `EXPENSE` transactions are included in the totals; `TRANSFER` is excluded to avoid double counting | Use case — `CashFlowReportService` |
 | BR-090 | `netResult` is computed as `totalIncome − totalExpense` | Use case — `CashFlowReportService` |
 
+## Budgets (`/api/v1/companies/{id}/budgets`)
+
+| ID | Rule | Enforced by |
+|----|------|-------------|
+| BR-101 | `period` (a calendar month) is required and cannot be in the past | DTO — `@FutureOrPresent` |
+| BR-102 | `limit` is required and must be strictly positive | DTO — `@Positive` |
+| BR-103 | The referenced category must exist (404 otherwise) | Use case — `CreateBudgetUseCase` |
+| BR-104 | Budgets can only be set for `EXPENSE` categories | Use case — `CreateBudgetUseCase` |
+| BR-105 | Only one budget may exist per company, category and period | Use case — `CreateBudgetUseCase` |
+| BR-106 | Budget status (`spent`, `remaining`, `overBudget`) is computed from `EXPENSE` transactions recorded in the budget's category during its period | Use case — `GetBudgetStatusUseCase` |
+
+## Recurring Transactions (`/api/v1/companies/{id}/recurring-transactions`)
+
+| ID | Rule | Enforced by |
+|----|------|-------------|
+| BR-107 | Amount is required and must be strictly positive | DTO — `@Positive` |
+| BR-108 | Description is capped at 255 characters | DTO — `@Size(max = 255)` |
+| BR-109 | Frequency is required (`WEEKLY`, `MONTHLY` or `YEARLY`) | DTO — `CreateRecurringTransactionRuleRequest` |
+| BR-110 | `firstOccurrence` is required and cannot be in the past | DTO — `@FutureOrPresent` |
+| BR-111 | The referenced category must exist and its type must match the rule's own type | Use case — `CreateRecurringTransactionRuleUseCase` |
+| BR-112 | `TRANSFER` is rejected; recurring transfers are not supported | Controller — `RecurringTransactionRuleController` |
+| BR-113 | `POST .../generate-due` materializes every active rule whose `nextOccurrence` is on or before today into a real transaction (reusing `RecordTransactionUseCase`, so the same balance rules apply), then advances it to its next occurrence | Use case — `GenerateDueRecurringTransactionsUseCase` |
+| BR-114 | Deactivating a rule excludes it from future `generate-due` runs | Domain — `RecurringTransactionRule.deactivate()` |
+
+## Notifications (`/api/v1/notifications`)
+
+| ID | Rule | Enforced by |
+|----|------|-------------|
+| BR-115 | A notification is created for every `UserRegisteredEvent`, `TransactionRecordedEvent` and `InvoicePaidEvent` consumed from RabbitMQ | `UserRegisteredMessageListener`, `TransactionRecordedMessageListener`, `InvoicePaidMessageListener` |
+| BR-116 | Notifications are listed most-recent first; `unreadOnly=true` filters out already-read ones | Controller — `NotificationController` |
+| BR-117 | Marking a notification as read is idempotent | Domain — `Notification.markAsRead()` |
+| BR-118 | Marking a non-existent notification as read fails with 404 | Use case — `MarkNotificationAsReadUseCase` |
+
 ## Cross-cutting
 
 | ID | Rule | Enforced by |
@@ -157,3 +190,9 @@ violated), all as a structured `ApiError` body (see BR-092).
   working authentication provider for the rest of the API.
 - Authorization (which `Role` can call which endpoint) is not yet enforced — roles can be
   granted (BR-019/BR-020) but nothing currently checks them.
+- The notification feed (`/api/v1/notifications`) is global, not scoped to a user or company —
+  there is no session/current-user concept to scope it by yet, consistent with the authentication
+  gap above.
+- `POST /api/v1/companies/{id}/recurring-transactions/generate-due` must currently be triggered
+  manually (or by an external scheduler hitting the endpoint); there is no in-process scheduled job
+  calling it automatically.
