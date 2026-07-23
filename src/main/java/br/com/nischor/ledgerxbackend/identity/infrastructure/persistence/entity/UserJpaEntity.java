@@ -11,6 +11,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -36,7 +37,8 @@ public class UserJpaEntity extends AuditableEntity {
     protected UserJpaEntity() {
     }
 
-    public UserJpaEntity(String fullName, String email, String hashedPassword) {
+    public UserJpaEntity(UUID id, String fullName, String email, String hashedPassword) {
+        super(id);
         this.fullName = fullName;
         this.email = email;
         this.hashedPassword = hashedPassword;
