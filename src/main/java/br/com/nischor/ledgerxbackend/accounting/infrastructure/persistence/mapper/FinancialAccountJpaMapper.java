@@ -15,7 +15,7 @@ public class FinancialAccountJpaMapper {
     }
 
     public FinancialAccountJpaEntity toEntity(FinancialAccount account) {
-        return new FinancialAccountJpaEntity(account.getCompanyId(), account.getName(),
+        return new FinancialAccountJpaEntity(account.getId(), account.getCompanyId(), account.getName(),
                 account.getBalance().amount(), account.getBalance().currency().getCurrencyCode());
     }
 }
