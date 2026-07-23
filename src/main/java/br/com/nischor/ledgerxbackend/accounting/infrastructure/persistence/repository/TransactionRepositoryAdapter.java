@@ -31,4 +31,11 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 .map(mapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public List<Transaction> findByCategoryIdAndPeriod(UUID categoryId, LocalDate from, LocalDate to) {
+        return jpaRepository.findAllByCategoryIdAndOccurredOnBetween(categoryId, from, to).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }
