@@ -29,7 +29,8 @@ public class FinancialAccountJpaEntity extends AuditableEntity {
     protected FinancialAccountJpaEntity() {
     }
 
-    public FinancialAccountJpaEntity(UUID companyId, String name, BigDecimal balance, String currencyCode) {
+    public FinancialAccountJpaEntity(UUID id, UUID companyId, String name, BigDecimal balance, String currencyCode) {
+        super(id);
         this.companyId = companyId;
         this.name = name;
         this.balance = balance;
