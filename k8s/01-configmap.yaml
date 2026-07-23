@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ledgerx-config
+  namespace: ledgerx
+  labels:
+    app.kubernetes.io/part-of: ledgerx-backend
+data:
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_NAME: "ledgerx"
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+  SERVER_PORT: "8080"
+  # Set to "false" to skip the pt-BR sample data seeder on startup.
+  LEDGERX_SEED_ENABLED: "true"
