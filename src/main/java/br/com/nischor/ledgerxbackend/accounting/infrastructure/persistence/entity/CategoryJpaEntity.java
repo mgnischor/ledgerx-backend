@@ -26,7 +26,8 @@ public class CategoryJpaEntity extends AuditableEntity {
     protected CategoryJpaEntity() {
     }
 
-    public CategoryJpaEntity(UUID companyId, String name, TransactionType type) {
+    public CategoryJpaEntity(UUID id, UUID companyId, String name, TransactionType type) {
+        super(id);
         this.companyId = companyId;
         this.name = name;
         this.type = type;
