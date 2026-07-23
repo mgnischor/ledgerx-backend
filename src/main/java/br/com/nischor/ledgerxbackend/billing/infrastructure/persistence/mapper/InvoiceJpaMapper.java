@@ -29,10 +29,11 @@ public class InvoiceJpaMapper {
     }
 
     public InvoiceJpaEntity toEntity(Invoice invoice) {
-        var entity = new InvoiceJpaEntity(invoice.getCompanyId(), invoice.getPartyId(), invoice.getDirection());
+        var entity = new InvoiceJpaEntity(invoice.getId(), invoice.getCompanyId(), invoice.getPartyId(),
+                invoice.getDirection());
         entity.setStatus(invoice.getStatus());
         invoice.getInstallments().forEach(installment -> {
-            var installmentEntity = new InstallmentJpaEntity(entity, installment.getNumber(),
+            var installmentEntity = new InstallmentJpaEntity(installment.getId(), entity, installment.getNumber(),
                     installment.getAmount().amount(), installment.getDueDate());
             if (installment.isPaid()) {
                 installmentEntity.markAsPaid(installment.getPaidOn());
