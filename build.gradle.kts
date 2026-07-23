@@ -31,6 +31,7 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 
+    implementation("net.datafaker:datafaker:2.4.2")
     implementation("org.springframework.ai:spring-ai-starter-model-anthropic")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
