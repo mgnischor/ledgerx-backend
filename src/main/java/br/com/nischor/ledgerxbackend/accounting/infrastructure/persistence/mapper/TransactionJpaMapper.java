@@ -16,8 +16,8 @@ public class TransactionJpaMapper {
     }
 
     public TransactionJpaEntity toEntity(Transaction transaction) {
-        return new TransactionJpaEntity(transaction.getFinancialAccountId(), transaction.getCategoryId(),
-                transaction.getType(), transaction.getAmount().amount(), transaction.getDescription(),
-                transaction.getOccurredOn());
+        return new TransactionJpaEntity(transaction.getId(), transaction.getFinancialAccountId(),
+                transaction.getCategoryId(), transaction.getType(), transaction.getAmount().amount(),
+                transaction.getDescription(), transaction.getOccurredOn());
     }
 }
