@@ -1,5 +1,6 @@
 package br.com.nischor.ledgerxbackend.shared.infrastructure.web;
 
+import br.com.nischor.ledgerxbackend.identity.domain.exception.InvalidCredentialsException;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.BusinessRuleViolationException;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -21,5 +22,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ApiError.of(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Business Rule Violation",
                         exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiError.of(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", exception.getMessage()));
     }
 }
