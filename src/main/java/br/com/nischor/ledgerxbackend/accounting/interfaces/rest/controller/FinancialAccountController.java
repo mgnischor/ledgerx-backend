@@ -9,6 +9,12 @@ import br.com.nischor.ledgerxbackend.accounting.domain.repository.FinancialAccou
 import br.com.nischor.ledgerxbackend.accounting.interfaces.rest.dto.CreateFinancialAccountRequest;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.EntityNotFoundException;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.Money;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/companies/{companyId}/financial-accounts")
+@Tag(name = "Financial Accounts", description = "Cash/bank accounts held by a company")
 public class FinancialAccountController {
 
     private final FinancialAccountRepository financialAccountRepository;
@@ -41,6 +48,10 @@ public class FinancialAccountController {
     }
 
     /** BR-044/BR-047/BR-048: name is required, opening balance cannot be negative, currency defaults to BRL. */
+    @Operation(summary = "Create a financial account", description = "BR-044/BR-047/BR-048.")
+    @ApiResponse(responseCode = "201", description = "Financial account created")
+    @ApiResponse(responseCode = "400", description = "Validation failure (blank name, negative balance, etc.)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     @PostMapping
     public ResponseEntity<FinancialAccountDto> create(@PathVariable UUID companyId,
             @Valid @RequestBody CreateFinancialAccountRequest request) {
@@ -49,6 +60,8 @@ public class FinancialAccountController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    @Operation(summary = "List financial accounts of a company")
+    @ApiResponse(responseCode = "200", description = "Financial accounts listed")
     @GetMapping
     public List<FinancialAccountDto> listByCompany(@PathVariable UUID companyId) {
         return financialAccountRepository.findAllByCompanyId(companyId).stream()
@@ -56,6 +69,10 @@ public class FinancialAccountController {
                 .toList();
     }
 
+    @Operation(summary = "Get a financial account by id")
+    @ApiResponse(responseCode = "200", description = "Financial account found")
+    @ApiResponse(responseCode = "404", description = "Financial account not found",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     @GetMapping("/{accountId}")
     public FinancialAccountDto getById(@PathVariable UUID companyId, @PathVariable UUID accountId) {
         return financialAccountRepository.findById(accountId)
@@ -64,6 +81,10 @@ public class FinancialAccountController {
     }
 
     /** BR-051/BR-052: the account must exist; deactivating removes it from use in new transactions. */
+    @Operation(summary = "Deactivate a financial account", description = "BR-051/BR-052.")
+    @ApiResponse(responseCode = "200", description = "Financial account deactivated")
+    @ApiResponse(responseCode = "404", description = "Financial account not found",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     @PatchMapping("/{accountId}/deactivate")
     public FinancialAccountDto deactivate(@PathVariable UUID companyId, @PathVariable UUID accountId) {
         return deactivateFinancialAccountUseCase.execute(accountId);
