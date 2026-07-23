@@ -6,6 +6,12 @@ import br.com.nischor.ledgerxbackend.identity.application.usecase.GrantRoleUseCa
 import br.com.nischor.ledgerxbackend.identity.application.usecase.RegisterUserUseCase;
 import br.com.nischor.ledgerxbackend.identity.interfaces.rest.dto.CreateUserRequest;
 import br.com.nischor.ledgerxbackend.identity.interfaces.rest.dto.GrantRoleRequest;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -19,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@Tag(name = "Users", description = "User registration, role management and account lifecycle")
 public class UserController {
 
     private final RegisterUserUseCase registerUserUseCase;
@@ -37,6 +44,13 @@ public class UserController {
      * enforced by {@link CreateUserRequest}'s bean validation constraints before this method
      * body runs.
      */
+    @Operation(summary = "Register a new user",
+            description = "Creates a user with a strong, Argon2id-hashed password. BR-001..BR-018.")
+    @ApiResponse(responseCode = "201", description = "User created")
+    @ApiResponse(responseCode = "400", description = "Validation failure (weak password, invalid email, etc.)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "422", description = "Email already registered",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     @PostMapping
     public ResponseEntity<UserDto> register(@Valid @RequestBody CreateUserRequest request) {
         var dto = registerUserUseCase.execute(request.fullName(), request.email(), request.password());
@@ -48,12 +62,20 @@ public class UserController {
      * by the {@code Role} enum (an unknown role value is rejected by Jackson before this method
      * runs, returning 400 Bad Request).
      */
+    @Operation(summary = "Grant a role to a user", description = "BR-020/BR-021.")
+    @ApiResponse(responseCode = "200", description = "Role granted")
+    @ApiResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     @PatchMapping("/{userId}/roles")
     public ResponseEntity<UserDto> grantRole(@PathVariable UUID userId, @Valid @RequestBody GrantRoleRequest request) {
         return ResponseEntity.ok(grantRoleUseCase.execute(userId, request.role()));
     }
 
     /** BR-023/BR-024: the target user must exist; deactivating twice is a no-op. */
+    @Operation(summary = "Deactivate a user", description = "Idempotent. BR-023/BR-024.")
+    @ApiResponse(responseCode = "200", description = "User deactivated")
+    @ApiResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     @PatchMapping("/{userId}/deactivate")
     public ResponseEntity<UserDto> deactivate(@PathVariable UUID userId) {
         return ResponseEntity.ok(deactivateUserUseCase.execute(userId));
