@@ -14,4 +14,6 @@ public interface CompanyRepository {
     Optional<Company> findByCnpj(DocumentNumber cnpj);
 
     boolean existsByCnpj(DocumentNumber cnpj);
+
+    long count();
 }
