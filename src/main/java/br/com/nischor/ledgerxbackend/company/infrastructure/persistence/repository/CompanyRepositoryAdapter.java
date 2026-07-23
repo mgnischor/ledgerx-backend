@@ -38,4 +38,9 @@ public class CompanyRepositoryAdapter implements CompanyRepository {
     public boolean existsByCnpj(DocumentNumber cnpj) {
         return jpaRepository.existsByCnpj(cnpj.value());
     }
+
+    @Override
+    public long count() {
+        return jpaRepository.count();
+    }
 }
