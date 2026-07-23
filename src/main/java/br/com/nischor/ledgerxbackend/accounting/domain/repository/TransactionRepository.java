@@ -10,4 +10,6 @@ public interface TransactionRepository {
     Transaction save(Transaction transaction);
 
     List<Transaction> findByFinancialAccountIdAndPeriod(UUID financialAccountId, LocalDate from, LocalDate to);
+
+    List<Transaction> findByCategoryIdAndPeriod(UUID categoryId, LocalDate from, LocalDate to);
 }
