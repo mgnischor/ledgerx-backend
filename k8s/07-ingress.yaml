@@ -1,0 +1,26 @@
+# Requires an ingress controller (e.g. ingress-nginx) installed in the
+# cluster. Adjust `host` to a domain you control, or remove it to match all
+# hosts for local testing (e.g. with minikube tunnel / kind port-forward).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ledgerx-backend
+  namespace: ledgerx
+  labels:
+    app.kubernetes.io/name: ledgerx-backend
+    app.kubernetes.io/part-of: ledgerx-backend
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ledgerx.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ledgerx-backend
+                port:
+                  number: 8080
