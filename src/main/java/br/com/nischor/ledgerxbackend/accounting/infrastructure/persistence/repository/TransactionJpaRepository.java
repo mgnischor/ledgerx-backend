@@ -10,4 +10,7 @@ public interface TransactionJpaRepository extends JpaRepository<TransactionJpaEn
 
     List<TransactionJpaEntity> findAllByFinancialAccountIdAndOccurredOnBetween(UUID financialAccountId,
             LocalDate from, LocalDate to);
+
+    List<TransactionJpaEntity> findAllByCategoryIdAndOccurredOnBetween(UUID categoryId, LocalDate from,
+            LocalDate to);
 }
