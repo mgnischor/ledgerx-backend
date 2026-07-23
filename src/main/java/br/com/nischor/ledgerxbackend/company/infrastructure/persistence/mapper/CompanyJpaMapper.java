@@ -14,15 +14,21 @@ public class CompanyJpaMapper {
         var address = new Address(entity.getAddress().getStreet(), entity.getAddress().getNumber(),
                 entity.getAddress().getCity(), entity.getAddress().getState(), entity.getAddress().getZipCode(),
                 entity.getAddress().getCountry());
-        return new Company(entity.getId(), entity.getLegalName(), entity.getTradeName(),
+        var company = new Company(entity.getId(), entity.getLegalName(), entity.getTradeName(),
                 DocumentNumber.cnpj(entity.getCnpj()), entity.getSize(), address);
+        if (!entity.isActive()) {
+            company.deactivate();
+        }
+        return company;
     }
 
     public CompanyJpaEntity toEntity(Company company) {
         var address = company.getAddress();
         var embeddable = new AddressEmbeddable(address.street(), address.number(), address.city(), address.state(),
                 address.zipCode(), address.country());
-        return new CompanyJpaEntity(company.getId(), company.getLegalName(), company.getTradeName(),
+        var entity = new CompanyJpaEntity(company.getId(), company.getLegalName(), company.getTradeName(),
                 company.getCnpj().value(), company.getSize(), embeddable);
+        entity.setActive(company.isActive());
+        return entity;
     }
 }
