@@ -56,4 +56,8 @@ public class FinancialAccountJpaEntity extends AuditableEntity {
     public boolean isActive() {
         return active;
     }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }
