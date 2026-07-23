@@ -32,7 +32,8 @@ public class PartyJpaEntity extends AuditableEntity {
     protected PartyJpaEntity() {
     }
 
-    public PartyJpaEntity(UUID companyId, String name, String document, String email, PartyType type) {
+    public PartyJpaEntity(UUID id, UUID companyId, String name, String document, String email, PartyType type) {
+        super(id);
         this.companyId = companyId;
         this.name = name;
         this.document = document;
