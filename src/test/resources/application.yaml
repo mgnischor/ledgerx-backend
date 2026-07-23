@@ -1,0 +1,4 @@
+ledgerx:
+  security:
+    tls:
+      enabled: false
