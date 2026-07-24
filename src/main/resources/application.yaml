@@ -42,3 +42,11 @@ ledgerx:
       # real certificate instead of the self-signed one generated fresh on every startup.
       enabled: ${TLS_ENABLED:true}
       common-name: ${TLS_COMMON_NAME:localhost}
+    bootstrap-admin:
+      # Ensures a DEVELOPER account exists on first startup so someone can log in and grant roles
+      # to everyone else (POST /api/v1/auth/login). Change the password (or disable) outside local
+      # development. See AdminBootstrapRunner.
+      enabled: ${BOOTSTRAP_ADMIN_ENABLED:true}
+      full-name: ${BOOTSTRAP_ADMIN_FULL_NAME:System Administrator}
+      email: ${BOOTSTRAP_ADMIN_EMAIL:admin@ledgerx.local}
+      password: ${BOOTSTRAP_ADMIN_PASSWORD:ChangeMe@2026}
