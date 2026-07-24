@@ -3,6 +3,7 @@ package br.com.nischor.ledgerxbackend.reporting.interfaces.rest.controller;
 import br.com.nischor.ledgerxbackend.reporting.application.query.CashFlowReportService;
 import br.com.nischor.ledgerxbackend.reporting.application.query.CashFlowSummary;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.BusinessRuleViolationException;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,6 +45,7 @@ public class ReportController {
     @ApiResponse(responseCode = "200", description = "Cash-flow summary computed")
     @ApiResponse(responseCode = "422", description = "'from' after 'to', or window larger than 366 days",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.READ)
     @GetMapping("/cash-flow")
     public CashFlowSummary cashFlow(@PathVariable UUID companyId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
