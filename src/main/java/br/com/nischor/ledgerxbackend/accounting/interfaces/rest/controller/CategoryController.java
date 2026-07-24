@@ -5,6 +5,7 @@ import br.com.nischor.ledgerxbackend.accounting.application.mapper.CategoryMappe
 import br.com.nischor.ledgerxbackend.accounting.application.usecase.CreateCategoryUseCase;
 import br.com.nischor.ledgerxbackend.accounting.domain.repository.CategoryRepository;
 import br.com.nischor.ledgerxbackend.accounting.interfaces.rest.dto.CreateCategoryRequest;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +46,7 @@ public class CategoryController {
     @ApiResponse(responseCode = "201", description = "Category created")
     @ApiResponse(responseCode = "400", description = "Validation failure (blank name, missing type, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<CategoryDto> create(@PathVariable UUID companyId,
             @Valid @RequestBody CreateCategoryRequest request) {
@@ -53,6 +56,7 @@ public class CategoryController {
 
     @Operation(summary = "List categories of a company")
     @ApiResponse(responseCode = "200", description = "Categories listed")
+    @PreAuthorize(Authorizations.READ)
     @GetMapping
     public List<CategoryDto> listByCompany(@PathVariable UUID companyId) {
         return categoryRepository.findAllByCompanyId(companyId).stream().map(categoryMapper::toDto).toList();
