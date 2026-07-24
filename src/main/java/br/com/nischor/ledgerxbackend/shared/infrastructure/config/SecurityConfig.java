@@ -2,11 +2,13 @@ package br.com.nischor.ledgerxbackend.shared.infrastructure.config;
 
 import br.com.nischor.ledgerxbackend.shared.infrastructure.security.JwtAuthenticationFilter;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.security.JwtService;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.debug.DebugModeFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -26,6 +28,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * authenticated between {@code GET /oauth2/authorize} and their consent decision.
  */
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private static final String[] PUBLIC_DOC_PATHS = {
@@ -43,7 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(Customizer.withDefaults())
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new DebugModeFilter(), JwtAuthenticationFilter.class);
         return http.build();
     }
 }
