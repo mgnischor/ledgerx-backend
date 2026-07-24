@@ -9,6 +9,7 @@ import br.com.nischor.ledgerxbackend.accounting.application.usecase.GetBudgetSta
 import br.com.nischor.ledgerxbackend.accounting.domain.repository.BudgetRepository;
 import br.com.nischor.ledgerxbackend.accounting.interfaces.rest.dto.CreateBudgetRequest;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.Money;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,6 +66,7 @@ public class BudgetController {
     @ApiResponse(responseCode = "422",
             description = "Business rule violation (non-EXPENSE category, duplicate period)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<BudgetDto> create(@PathVariable UUID companyId,
             @Valid @RequestBody CreateBudgetRequest request) {
@@ -74,6 +77,7 @@ public class BudgetController {
 
     @Operation(summary = "List budgets of a company")
     @ApiResponse(responseCode = "200", description = "Budgets listed")
+    @PreAuthorize(Authorizations.READ)
     @GetMapping
     public List<BudgetDto> listByCompany(@PathVariable UUID companyId) {
         return budgetRepository.findAllByCompanyId(companyId).stream().map(budgetMapper::toDto).toList();
@@ -84,6 +88,7 @@ public class BudgetController {
     @ApiResponse(responseCode = "200", description = "Budget status computed")
     @ApiResponse(responseCode = "404", description = "Budget not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.READ)
     @GetMapping("/{budgetId}/status")
     public BudgetStatusDto getStatus(@PathVariable UUID companyId, @PathVariable UUID budgetId) {
         return getBudgetStatusUseCase.execute(budgetId);
@@ -93,6 +98,7 @@ public class BudgetController {
     @ApiResponse(responseCode = "200", description = "Budget deactivated")
     @ApiResponse(responseCode = "404", description = "Budget not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.DELETE)
     @PatchMapping("/{budgetId}/deactivate")
     public BudgetDto deactivate(@PathVariable UUID companyId, @PathVariable UUID budgetId) {
         return deactivateBudgetUseCase.execute(budgetId);
