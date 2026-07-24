@@ -1,8 +1,10 @@
 package br.com.nischor.ledgerxbackend.identity.infrastructure.security;
 
+import br.com.nischor.ledgerxbackend.identity.domain.model.RolePermissions;
 import br.com.nischor.ledgerxbackend.identity.domain.model.User;
 import br.com.nischor.ledgerxbackend.identity.domain.repository.UserRepository;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.EmailAddress;
+import java.util.stream.Stream;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -32,11 +34,16 @@ public class LedgerxUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Invalid email: %s".formatted(email), e);
         }
 
+        String[] authorities = Stream
+                .concat(user.getRoles().stream().map(role -> "ROLE_" + role),
+                        RolePermissions.of(user.getRoles()).stream().map(permission -> "PERMISSION_" + permission))
+                .toArray(String[]::new);
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail().value())
                 .password(user.getHashedPassword())
                 .disabled(!user.isActive())
-                .authorities(user.getRoles().stream().map(role -> "ROLE_" + role).toArray(String[]::new))
+                .authorities(authorities)
                 .build();
     }
 }
