@@ -3,7 +3,6 @@ package br.com.nischor.ledgerxbackend.shared.infrastructure.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -21,7 +20,7 @@ class JwtServiceTest {
         JwtProperties properties = new JwtProperties();
         properties.setIssuer("ledgerx-backend-test");
         properties.setExpirationSeconds(3600);
-        jwtService = new JwtService(keyPair, properties, new ObjectMapper());
+        jwtService = new JwtService(keyPair, properties);
     }
 
     @Test
@@ -59,7 +58,7 @@ class JwtServiceTest {
         KeyPair otherKeyPair = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
         JwtProperties properties = new JwtProperties();
         properties.setIssuer("ledgerx-backend-test");
-        JwtService otherJwtService = new JwtService(otherKeyPair, properties, new ObjectMapper());
+        JwtService otherJwtService = new JwtService(otherKeyPair, properties);
 
         assertThatThrownBy(() -> otherJwtService.verify(token)).isInstanceOf(InvalidJwtException.class);
     }
@@ -70,7 +69,7 @@ class JwtServiceTest {
         JwtProperties expiredProperties = new JwtProperties();
         expiredProperties.setIssuer("ledgerx-backend-test");
         expiredProperties.setExpirationSeconds(-1);
-        JwtService expiringJwtService = new JwtService(keyPair, expiredProperties, new ObjectMapper());
+        JwtService expiringJwtService = new JwtService(keyPair, expiredProperties);
         String token = expiringJwtService.issue("user@example.com", Set.of("COLLABORATOR"), Set.of("READ"));
 
         assertThatThrownBy(() -> expiringJwtService.verify(token)).isInstanceOf(InvalidJwtException.class);
