@@ -5,6 +5,7 @@ import br.com.nischor.ledgerxbackend.company.application.usecase.DeactivateCompa
 import br.com.nischor.ledgerxbackend.company.application.usecase.RegisterCompanyUseCase;
 import br.com.nischor.ledgerxbackend.company.domain.valueobject.Address;
 import br.com.nischor.ledgerxbackend.company.interfaces.rest.dto.CreateCompanyRequest;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,6 +50,7 @@ public class CompanyController {
             content = @Content(schema = @Schema(implementation = ApiError.class)))
     @ApiResponse(responseCode = "422", description = "CNPJ already registered",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<CompanyDto> register(@Valid @RequestBody CreateCompanyRequest request) {
         var address = new Address(request.street(), request.number(), request.city(), request.state(),
@@ -62,6 +65,7 @@ public class CompanyController {
     @ApiResponse(responseCode = "200", description = "Company deactivated")
     @ApiResponse(responseCode = "404", description = "Company not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.DELETE)
     @PatchMapping("/{companyId}/deactivate")
     public ResponseEntity<CompanyDto> deactivate(@PathVariable UUID companyId) {
         return ResponseEntity.ok(deactivateCompanyUseCase.execute(companyId));
