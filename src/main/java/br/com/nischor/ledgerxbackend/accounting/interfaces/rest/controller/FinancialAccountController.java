@@ -9,6 +9,7 @@ import br.com.nischor.ledgerxbackend.accounting.domain.repository.FinancialAccou
 import br.com.nischor.ledgerxbackend.accounting.interfaces.rest.dto.CreateFinancialAccountRequest;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.EntityNotFoundException;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.Money;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,6 +54,7 @@ public class FinancialAccountController {
     @ApiResponse(responseCode = "201", description = "Financial account created")
     @ApiResponse(responseCode = "400", description = "Validation failure (blank name, negative balance, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<FinancialAccountDto> create(@PathVariable UUID companyId,
             @Valid @RequestBody CreateFinancialAccountRequest request) {
@@ -62,6 +65,7 @@ public class FinancialAccountController {
 
     @Operation(summary = "List financial accounts of a company")
     @ApiResponse(responseCode = "200", description = "Financial accounts listed")
+    @PreAuthorize(Authorizations.READ)
     @GetMapping
     public List<FinancialAccountDto> listByCompany(@PathVariable UUID companyId) {
         return financialAccountRepository.findAllByCompanyId(companyId).stream()
@@ -73,6 +77,7 @@ public class FinancialAccountController {
     @ApiResponse(responseCode = "200", description = "Financial account found")
     @ApiResponse(responseCode = "404", description = "Financial account not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.READ)
     @GetMapping("/{accountId}")
     public FinancialAccountDto getById(@PathVariable UUID companyId, @PathVariable UUID accountId) {
         return financialAccountRepository.findById(accountId)
@@ -85,6 +90,7 @@ public class FinancialAccountController {
     @ApiResponse(responseCode = "200", description = "Financial account deactivated")
     @ApiResponse(responseCode = "404", description = "Financial account not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.DELETE)
     @PatchMapping("/{accountId}/deactivate")
     public FinancialAccountDto deactivate(@PathVariable UUID companyId, @PathVariable UUID accountId) {
         return deactivateFinancialAccountUseCase.execute(accountId);
