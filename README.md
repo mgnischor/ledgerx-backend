@@ -168,6 +168,14 @@ browsed without authentication.
 
 ## Authentication
 
+On first startup, `AdminBootstrapRunner` creates a `DEVELOPER` account (default
+`admin@ledgerx.local` / `ChangeMe@2026`, idempotent — skipped if that email is
+already registered) so there is always someone who can log in and grant roles
+to everyone else. **Change the password, or override
+`ledgerx.security.bootstrap-admin.*` (`BOOTSTRAP_ADMIN_EMAIL`/
+`BOOTSTRAP_ADMIN_PASSWORD`/...), or set `.enabled=false`, before deploying
+anywhere other than local development.**
+
 Two independent authentication mechanisms are available:
 
 - **Password login (`POST /api/v1/auth/login`)** — exchanges an email/password
