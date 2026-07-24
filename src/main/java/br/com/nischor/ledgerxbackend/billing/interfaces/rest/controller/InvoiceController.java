@@ -11,6 +11,7 @@ import br.com.nischor.ledgerxbackend.billing.interfaces.rest.dto.CreateInvoiceRe
 import br.com.nischor.ledgerxbackend.billing.interfaces.rest.dto.RegisterPaymentRequest;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.EntityNotFoundException;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.Money;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,6 +22,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,6 +65,7 @@ public class InvoiceController {
             content = @Content(schema = @Schema(implementation = ApiError.class)))
     @ApiResponse(responseCode = "422", description = "Non-positive installment amount",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<InvoiceDto> issue(@Valid @RequestBody CreateInvoiceRequest request) {
         var amounts = request.installmentAmounts().stream().map(Money::brl).toList();
@@ -75,6 +78,7 @@ public class InvoiceController {
     @ApiResponse(responseCode = "200", description = "Invoice found")
     @ApiResponse(responseCode = "404", description = "Invoice not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.READ)
     @GetMapping("/{invoiceId}")
     public InvoiceDto getById(@PathVariable UUID invoiceId) {
         return invoiceRepository.findById(invoiceId)
@@ -96,6 +100,7 @@ public class InvoiceController {
     @ApiResponse(responseCode = "422",
             description = "Business rule violation (canceled invoice, installment does not belong to invoice)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.APPROVE)
     @PatchMapping("/{invoiceId}/payments")
     public InvoiceDto registerPayment(@PathVariable UUID invoiceId, @Valid @RequestBody RegisterPaymentRequest request) {
         return registerPaymentUseCase.execute(invoiceId, request.installmentId(), request.paidOn());
@@ -108,6 +113,7 @@ public class InvoiceController {
             content = @Content(schema = @Schema(implementation = ApiError.class)))
     @ApiResponse(responseCode = "422", description = "Invoice is fully paid and cannot be canceled",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.DELETE)
     @PatchMapping("/{invoiceId}/cancel")
     public InvoiceDto cancel(@PathVariable UUID invoiceId) {
         return cancelInvoiceUseCase.execute(invoiceId);
