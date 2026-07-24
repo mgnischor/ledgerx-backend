@@ -5,7 +5,9 @@ import br.com.nischor.ledgerxbackend.identity.application.mapper.UserMapper;
 import br.com.nischor.ledgerxbackend.identity.domain.model.User;
 import br.com.nischor.ledgerxbackend.identity.domain.repository.UserRepository;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.EntityNotFoundException;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import java.util.UUID;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +21,7 @@ public class DeactivateUserUseCase {
         this.userMapper = userMapper;
     }
 
+    @PreAuthorize(Authorizations.FULL_ACCESS)
     public UserDto execute(UUID userId) {
         var user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException(User.class, userId));
         user.deactivate();
