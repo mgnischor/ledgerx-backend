@@ -3,6 +3,7 @@ package br.com.nischor.ledgerxbackend.accounting.interfaces.rest.controller;
 import br.com.nischor.ledgerxbackend.accounting.application.usecase.TransferFundsUseCase;
 import br.com.nischor.ledgerxbackend.accounting.interfaces.rest.dto.TransferFundsRequest;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.Money;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,6 +44,7 @@ public class TransferController {
             content = @Content(schema = @Schema(implementation = ApiError.class)))
     @ApiResponse(responseCode = "422", description = "Insufficient balance on the source account",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<Void> transfer(@Valid @RequestBody TransferFundsRequest request) {
         transferFundsUseCase.execute(request.fromAccountId(), request.toAccountId(), Money.brl(request.amount()));
