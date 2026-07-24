@@ -1,5 +1,5 @@
 services:
-    ledgerx-backend:
+    ledgerx:
         build:
             context: .
             dockerfile: Dockerfile
