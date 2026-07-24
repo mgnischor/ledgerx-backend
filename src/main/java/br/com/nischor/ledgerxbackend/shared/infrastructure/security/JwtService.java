@@ -38,7 +38,7 @@ public class JwtService {
         this.objectMapper = objectMapper;
     }
 
-    public String issue(String subject, Set<String> roles) {
+    public String issue(String subject, Set<String> roles, Set<String> permissions) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plusSeconds(properties.getExpirationSeconds());
 
@@ -50,6 +50,7 @@ public class JwtService {
         claims.put("iss", properties.getIssuer());
         claims.put("sub", subject);
         claims.put("roles", roles);
+        claims.put("permissions", permissions);
         claims.put("iat", issuedAt.getEpochSecond());
         claims.put("exp", expiresAt.getEpochSecond());
 
@@ -84,7 +85,9 @@ public class JwtService {
         String subject = (String) claims.get("sub");
         @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) claims.getOrDefault("roles", List.of());
-        return new JwtClaims(subject, roles);
+        @SuppressWarnings("unchecked")
+        List<String> permissions = (List<String>) claims.getOrDefault("permissions", List.of());
+        return new JwtClaims(subject, roles, permissions);
     }
 
     private byte[] sign(String signingInput) {
