@@ -2,6 +2,7 @@ package br.com.nischor.ledgerxbackend.identity.application.usecase;
 
 import br.com.nischor.ledgerxbackend.identity.application.dto.AuthenticationResultDto;
 import br.com.nischor.ledgerxbackend.identity.domain.exception.InvalidCredentialsException;
+import br.com.nischor.ledgerxbackend.identity.domain.model.RolePermissions;
 import br.com.nischor.ledgerxbackend.identity.domain.repository.UserRepository;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.EmailAddress;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.security.JwtProperties;
@@ -37,7 +38,8 @@ public class LoginUseCase {
         }
 
         var roles = user.getRoles().stream().map(Enum::name).collect(Collectors.toSet());
-        var accessToken = jwtService.issue(user.getEmail().value(), roles);
+        var permissions = RolePermissions.of(user.getRoles()).stream().map(Enum::name).collect(Collectors.toSet());
+        var accessToken = jwtService.issue(user.getEmail().value(), roles, permissions);
         return new AuthenticationResultDto(accessToken, TOKEN_TYPE, jwtProperties.getExpirationSeconds());
     }
 }
