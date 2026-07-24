@@ -188,9 +188,29 @@ Two independent authentication mechanisms are available:
   with a separate, ephemeral RSA key (regenerated every startup) and are
   unrelated to the Ed25519 JWTs above.
 
-Neither mechanism is wired up for authorization (which roles/scopes can do
-what) beyond authentication itself yet (see "Known gaps" in
-[BUSINESS_RULES.md](BUSINESS_RULES.md)).
+## Authorization profiles
+
+Every authenticated user carries one or more `Role`s (`identity` domain model), each mapped to a
+fixed set of `Permission`s by `RolePermissions`. Both authentication mechanisms above populate the
+same `ROLE_*`/`PERMISSION_*` Spring Security authorities from this single mapping, and business
+endpoints enforce them via `@PreAuthorize` (see BR-119..BR-126 in
+[BUSINESS_RULES.md](BUSINESS_RULES.md) for the full endpoint-by-endpoint breakdown):
+
+| Role | Permissions | Summary |
+|------|-------------|---------|
+| `DEVELOPER` | READ, CREATE, UPDATE, DELETE, APPROVE, DEBUG | Full access + debug mode |
+| `ADMINISTRATOR` | READ, CREATE, UPDATE, DELETE, APPROVE | Full access |
+| `MANAGER` | READ, CREATE, UPDATE, APPROVE | Add / change / approve changes |
+| `COLLABORATOR` | READ, CREATE, UPDATE | Add / change |
+
+Debug mode (`DEVELOPER` only) adds two things not available to any other role:
+
+- `GET /api/v1/debug/info` — runtime/build diagnostics (`DebugController`).
+- `X-Debug-Request-Id` / `X-Debug-Duration-Ms` response headers on every request
+  (`DebugModeFilter`), to trace individual requests without an external APM tool.
+
+A caller authenticated but lacking the required role/permission gets `403 Forbidden` with a
+structured `ApiError` body (`GlobalExceptionHandler`), not a stack trace.
 
 ## TLS
 
