@@ -18,6 +18,13 @@ import org.springframework.stereotype.Service;
  * Issues and verifies compact JWS tokens signed with Ed25519 (JWA algorithm name "EdDSA"), built
  * directly on {@code java.security} rather than a third-party JWT library, since the JDK has had
  * native Ed25519 {@link java.security.Signature} support since Java 15.
+ *
+ * <p>Uses its own private {@link ObjectMapper} instance rather than injecting Spring's
+ * autoconfigured bean: this app's classpath carries both Jackson 2 and Jackson 3 (pulled in
+ * transitively by Spring Security's OAuth2/JOSE modules), and which {@code ObjectMapper} type
+ * Boot's {@code JacksonAutoConfiguration} exposes as a bean is an implementation detail that has
+ * flipped between them across Boot versions. Claims here are a flat map of strings/numbers/
+ * collections, so no Spring-managed modules (Java Time, etc.) are needed anyway.
  */
 @Service
 public class JwtService {
@@ -30,12 +37,11 @@ public class JwtService {
 
     private final KeyPair keyPair;
     private final JwtProperties properties;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JwtService(KeyPair keyPair, JwtProperties properties, ObjectMapper objectMapper) {
+    public JwtService(KeyPair keyPair, JwtProperties properties) {
         this.keyPair = keyPair;
         this.properties = properties;
-        this.objectMapper = objectMapper;
     }
 
     public String issue(String subject, Set<String> roles, Set<String> permissions) {
