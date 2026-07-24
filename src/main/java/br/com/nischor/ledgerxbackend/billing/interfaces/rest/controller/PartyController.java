@@ -6,6 +6,7 @@ import br.com.nischor.ledgerxbackend.billing.application.usecase.CreatePartyUseC
 import br.com.nischor.ledgerxbackend.billing.domain.repository.PartyRepository;
 import br.com.nischor.ledgerxbackend.billing.interfaces.rest.dto.CreatePartyRequest;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.DocumentNumber;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,6 +53,7 @@ public class PartyController {
     @ApiResponse(responseCode = "201", description = "Party created")
     @ApiResponse(responseCode = "400", description = "Validation failure (invalid document, invalid email, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<PartyDto> create(@PathVariable UUID companyId,
             @Valid @RequestBody CreatePartyRequest request) {
@@ -63,6 +66,7 @@ public class PartyController {
 
     @Operation(summary = "List parties of a company")
     @ApiResponse(responseCode = "200", description = "Parties listed")
+    @PreAuthorize(Authorizations.READ)
     @GetMapping
     public List<PartyDto> listByCompany(@PathVariable UUID companyId) {
         return partyRepository.findAllByCompanyId(companyId).stream().map(partyMapper::toDto).toList();
