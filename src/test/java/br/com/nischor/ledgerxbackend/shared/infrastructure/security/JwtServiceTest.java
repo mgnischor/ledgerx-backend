@@ -26,24 +26,26 @@ class JwtServiceTest {
 
     @Test
     void issuesTokenWithThreeSegments() {
-        String token = jwtService.issue("user@example.com", Set.of("ADMIN"));
+        String token = jwtService.issue("user@example.com", Set.of("ADMINISTRATOR"), Set.of("READ"));
 
         assertThat(token.split("\\.", -1)).hasSize(3);
     }
 
     @Test
-    void verifyRoundTripsSubjectAndRoles() {
-        String token = jwtService.issue("user@example.com", Set.of("ADMIN", "FINANCE"));
+    void verifyRoundTripsSubjectRolesAndPermissions() {
+        String token = jwtService.issue("user@example.com", Set.of("MANAGER"),
+                Set.of("READ", "CREATE", "UPDATE", "APPROVE"));
 
         JwtClaims claims = jwtService.verify(token);
 
         assertThat(claims.subject()).isEqualTo("user@example.com");
-        assertThat(claims.roles()).containsExactlyInAnyOrder("ADMIN", "FINANCE");
+        assertThat(claims.roles()).containsExactly("MANAGER");
+        assertThat(claims.permissions()).containsExactlyInAnyOrder("READ", "CREATE", "UPDATE", "APPROVE");
     }
 
     @Test
     void rejectsTokenWithTamperedPayload() {
-        String token = jwtService.issue("user@example.com", Set.of("VIEWER"));
+        String token = jwtService.issue("user@example.com", Set.of("COLLABORATOR"), Set.of("READ", "CREATE"));
         String[] segments = token.split("\\.", -1);
         String tampered = segments[0] + "." + segments[1] + "AA" + "." + segments[2];
 
@@ -52,7 +54,7 @@ class JwtServiceTest {
 
     @Test
     void rejectsTokenSignedByADifferentKeyPair() throws NoSuchAlgorithmException {
-        String token = jwtService.issue("user@example.com", Set.of("VIEWER"));
+        String token = jwtService.issue("user@example.com", Set.of("COLLABORATOR"), Set.of("READ", "CREATE"));
 
         KeyPair otherKeyPair = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
         JwtProperties properties = new JwtProperties();
@@ -69,7 +71,7 @@ class JwtServiceTest {
         expiredProperties.setIssuer("ledgerx-backend-test");
         expiredProperties.setExpirationSeconds(-1);
         JwtService expiringJwtService = new JwtService(keyPair, expiredProperties, new ObjectMapper());
-        String token = expiringJwtService.issue("user@example.com", Set.of("VIEWER"));
+        String token = expiringJwtService.issue("user@example.com", Set.of("COLLABORATOR"), Set.of("READ"));
 
         assertThatThrownBy(() -> expiringJwtService.verify(token)).isInstanceOf(InvalidJwtException.class);
     }
