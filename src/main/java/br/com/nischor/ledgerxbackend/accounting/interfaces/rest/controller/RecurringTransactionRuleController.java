@@ -11,6 +11,7 @@ import br.com.nischor.ledgerxbackend.accounting.domain.repository.RecurringTrans
 import br.com.nischor.ledgerxbackend.accounting.interfaces.rest.dto.CreateRecurringTransactionRuleRequest;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.BusinessRuleViolationException;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.Money;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,6 +74,7 @@ public class RecurringTransactionRuleController {
     @ApiResponse(responseCode = "422",
             description = "Business rule violation (TRANSFER type used here, category/type mismatch)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<RecurringTransactionRuleDto> create(@PathVariable UUID companyId,
             @Valid @RequestBody CreateRecurringTransactionRuleRequest request) {
@@ -88,6 +91,7 @@ public class RecurringTransactionRuleController {
 
     @Operation(summary = "List recurring transaction rules of a company")
     @ApiResponse(responseCode = "200", description = "Recurring transaction rules listed")
+    @PreAuthorize(Authorizations.READ)
     @GetMapping
     public List<RecurringTransactionRuleDto> listByCompany(@PathVariable UUID companyId) {
         return recurringTransactionRuleRepository.findAllByCompanyId(companyId).stream().map(mapper::toDto).toList();
@@ -102,6 +106,7 @@ public class RecurringTransactionRuleController {
             description = "BR-113. Safe to call repeatedly (e.g. from a daily scheduler); rules that "
                     + "are not yet due are skipped.")
     @ApiResponse(responseCode = "200", description = "Due transactions generated (may be an empty list)")
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping("/generate-due")
     public List<TransactionDto> generateDue(@PathVariable UUID companyId) {
         return generateDueRecurringTransactionsUseCase.execute(companyId);
@@ -112,6 +117,7 @@ public class RecurringTransactionRuleController {
     @ApiResponse(responseCode = "200", description = "Recurring transaction rule deactivated")
     @ApiResponse(responseCode = "404", description = "Recurring transaction rule not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.DELETE)
     @PatchMapping("/{ruleId}/deactivate")
     public RecurringTransactionRuleDto deactivate(@PathVariable UUID companyId, @PathVariable UUID ruleId) {
         return deactivateRecurringTransactionRuleUseCase.execute(ruleId);
