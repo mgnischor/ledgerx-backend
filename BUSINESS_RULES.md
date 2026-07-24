@@ -42,7 +42,7 @@ violated), all as a structured `ApiError` body (see BR-092).
 | BR-017 | Registering a user publishes a `UserRegisteredEvent` | Use case — `RegisterUserUseCase` |
 | BR-018 | Registering a duplicate email returns 422, not a generic error | Use case — `EmailAlreadyRegisteredException` |
 | BR-019 | Granting a role requires the target user to exist (404 otherwise) | Use case — `GrantRoleUseCase` |
-| BR-020 | Only roles defined by the `Role` enum (`OWNER`, `ADMIN`, `FINANCE`, `VIEWER`) may be granted; an unknown value is rejected as 400 before the use case runs | Controller — Jackson enum deserialization |
+| BR-020 | Only roles defined by the `Role` enum (`DEVELOPER`, `ADMINISTRATOR`, `MANAGER`, `COLLABORATOR`) may be granted; an unknown value is rejected as 400 before the use case runs | Controller — Jackson enum deserialization |
 | BR-021 | Deactivating a user requires the user to exist (404 otherwise) | Use case — `DeactivateUserUseCase` |
 | BR-022 | Deactivating an already-inactive user is idempotent (no error) | Domain — `User.deactivate()` |
 
@@ -167,6 +167,25 @@ violated), all as a structured `ApiError` body (see BR-092).
 | BR-117 | Marking a notification as read is idempotent | Domain — `Notification.markAsRead()` |
 | BR-118 | Marking a non-existent notification as read fails with 404 | Use case — `MarkNotificationAsReadUseCase` |
 
+## Authorization profiles
+
+Four authentication/authorization profiles are defined by the `Role` enum (`identity` domain).
+Each carries a fixed, non-configurable set of `Permission`s (`RolePermissions`), embedded as
+`PERMISSION_*` authorities in the JWT issued by `POST /api/v1/auth/login` and re-derived from the
+authenticated user's roles for the OAuth2/PKCE login form, so both authentication paths enforce
+the same rules.
+
+| ID | Rule | Enforced by |
+|----|------|-------------|
+| BR-119 | `DEVELOPER` holds every `Permission` (`READ`, `CREATE`, `UPDATE`, `DELETE`, `APPROVE`, `DEBUG`) — full access plus debug-mode tooling unavailable to any other role | Domain — `RolePermissions` |
+| BR-120 | `ADMINISTRATOR` holds `READ`/`CREATE`/`UPDATE`/`DELETE`/`APPROVE` — full access to business operations, no debug tooling | Domain — `RolePermissions` |
+| BR-121 | `MANAGER` holds `READ`/`CREATE`/`UPDATE`/`APPROVE` — can add and change records, and approve changes (e.g. registering invoice payments), but cannot delete/deactivate | Domain — `RolePermissions` |
+| BR-122 | `COLLABORATOR` holds `READ`/`CREATE`/`UPDATE` only — can add and change records, but cannot approve or delete/deactivate them | Domain — `RolePermissions` |
+| BR-123 | Every business-record endpoint (companies, financial accounts, categories, budgets, transactions, transfers, recurring rules, parties, invoices) requires the caller to hold the matching `Permission` authority, returning 403 otherwise; `PATCH /api/v1/invoices/{id}/payments` requires `APPROVE`, every `.../deactivate` and `.../cancel` endpoint requires `DELETE` | `@PreAuthorize` — business controllers |
+| BR-124 | Granting a role or deactivating a user account requires the `DEVELOPER` or `ADMINISTRATOR` role, returning 403 otherwise | `@PreAuthorize` — `GrantRoleUseCase`, `DeactivateUserUseCase` |
+| BR-125 | `GET /api/v1/debug/info`, and the `X-Debug-Request-Id`/`X-Debug-Duration-Ms` response headers added to every request, are only available to callers holding the `DEBUG` permission (`DEVELOPER` role) | `@PreAuthorize` — `DebugController`; `DebugModeFilter` |
+| BR-126 | An authenticated caller lacking the required permission/role receives `403 Forbidden` with a structured `ApiError` body, not a stack trace or generic 500 | `GlobalExceptionHandler` |
+
 ## Cross-cutting
 
 | ID | Rule | Enforced by |
@@ -184,12 +203,12 @@ violated), all as a structured `ApiError` body (see BR-092).
 
 ## Known gaps (not covered by this catalog)
 
-- No `SecurityFilterChain` authorizes the business endpoints yet (only the OpenAPI/Swagger paths
-  are explicitly permitted — see `SecurityConfig`). `spring-boot-starter-security-oauth2-client`
-  and `spring-boot-starter-ldap` are on the classpath but unconfigured, so there is currently no
-  working authentication provider for the rest of the API.
-- Authorization (which `Role` can call which endpoint) is not yet enforced — roles can be
-  granted (BR-019/BR-020) but nothing currently checks them.
+- `spring-boot-starter-ldap` is on the classpath but unconfigured — no LDAP authentication
+  provider is wired up.
+- The Authorization Server (`AuthorizationServerConfig`, `/oauth2/*`) issues its own RSA-signed
+  access tokens for the PKCE flow, but the API's resource-server chain (`SecurityConfig`) only
+  validates the Ed25519 JWTs issued by `POST /api/v1/auth/login`; OAuth2-issued tokens cannot yet
+  be used as a bearer credential against `/api/v1/**`.
 - The notification feed (`/api/v1/notifications`) is global, not scoped to a user or company —
   there is no session/current-user concept to scope it by yet, consistent with the authentication
   gap above.
