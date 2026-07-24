@@ -6,6 +6,7 @@ import br.com.nischor.ledgerxbackend.accounting.domain.model.TransactionType;
 import br.com.nischor.ledgerxbackend.accounting.interfaces.rest.dto.CreateTransactionRequest;
 import br.com.nischor.ledgerxbackend.shared.domain.exception.BusinessRuleViolationException;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.Money;
+import br.com.nischor.ledgerxbackend.shared.infrastructure.security.Authorizations;
 import br.com.nischor.ledgerxbackend.shared.infrastructure.web.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +50,7 @@ public class TransactionController {
             description = "Business rule violation (TRANSFER type used here, category/type mismatch, "
                     + "insufficient balance)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @PreAuthorize(Authorizations.CREATE)
     @PostMapping
     public ResponseEntity<TransactionDto> record(@Valid @RequestBody CreateTransactionRequest request) {
         if (request.type() == TransactionType.TRANSFER) {
