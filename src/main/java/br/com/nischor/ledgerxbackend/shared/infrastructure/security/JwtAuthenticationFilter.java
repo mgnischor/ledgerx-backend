@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,10 +55,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void authenticate(String token) {
         JwtClaims claims = jwtService.verify(token);
 
-        List<GrantedAuthority> authorities = claims.roles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                .map(GrantedAuthority.class::cast)
-                .toList();
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        claims.roles().forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
+        claims.permissions().forEach(permission -> authorities.add(new SimpleGrantedAuthority("PERMISSION_" + permission)));
 
         var authentication = new UsernamePasswordAuthenticationToken(claims.subject(), null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);
