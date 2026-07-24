@@ -185,6 +185,7 @@ the same rules.
 | BR-124 | Granting a role or deactivating a user account requires the `DEVELOPER` or `ADMINISTRATOR` role, returning 403 otherwise | `@PreAuthorize` — `GrantRoleUseCase`, `DeactivateUserUseCase` |
 | BR-125 | `GET /api/v1/debug/info`, and the `X-Debug-Request-Id`/`X-Debug-Duration-Ms` response headers added to every request, are only available to callers holding the `DEBUG` permission (`DEVELOPER` role) | `@PreAuthorize` — `DebugController`; `DebugModeFilter` |
 | BR-126 | An authenticated caller lacking the required permission/role receives `403 Forbidden` with a structured `ApiError` body, not a stack trace or generic 500 | `GlobalExceptionHandler` |
+| BR-127 | A `DEVELOPER` account is bootstrapped on every startup if its configured email is not already registered, so there is always at least one user who can grant roles; idempotent, and skippable with `ledgerx.security.bootstrap-admin.enabled=false` | `AdminBootstrapRunner` |
 
 ## Cross-cutting
 
