@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import br.com.nischor.ledgerxbackend.identity.domain.exception.InvalidCredentialsException;
+import br.com.nischor.ledgerxbackend.identity.domain.model.Permission;
 import br.com.nischor.ledgerxbackend.identity.domain.model.Role;
 import br.com.nischor.ledgerxbackend.identity.domain.model.User;
 import br.com.nischor.ledgerxbackend.identity.domain.repository.UserRepository;
@@ -47,14 +48,17 @@ class LoginUseCaseTest {
         loginUseCase = new LoginUseCase(userRepository, passwordEncoder, jwtService, jwtProperties);
 
         activeUser = new User(UUID.randomUUID(), "Jane Doe", new EmailAddress("jane@example.com"), HASHED_PASSWORD);
-        activeUser.grant(Role.ADMIN);
+        activeUser.grant(Role.ADMINISTRATOR);
     }
 
     @Test
     void issuesTokenForValidCredentials() {
         when(userRepository.findByEmail(new EmailAddress("jane@example.com"))).thenReturn(Optional.of(activeUser));
         when(passwordEncoder.matches(RAW_PASSWORD, HASHED_PASSWORD)).thenReturn(true);
-        when(jwtService.issue("jane@example.com", Set.of("ADMIN"))).thenReturn("signed-token");
+        var administratorPermissions = Set.of(Permission.READ.name(), Permission.CREATE.name(),
+                Permission.UPDATE.name(), Permission.DELETE.name(), Permission.APPROVE.name());
+        when(jwtService.issue("jane@example.com", Set.of("ADMINISTRATOR"), administratorPermissions))
+                .thenReturn("signed-token");
 
         var result = loginUseCase.execute("jane@example.com", RAW_PASSWORD);
 
