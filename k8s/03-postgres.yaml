@@ -33,9 +33,47 @@ spec:
         app.kubernetes.io/name: postgres
         app.kubernetes.io/part-of: ledgerx-backend
     spec:
+      automountServiceAccountToken: false
+      initContainers:
+        # Generates a self-signed cert so the postgres <-> backend link is encrypted.
+        # This proves nothing about server identity (sslmode=require on the client
+        # side does not validate it) -- swap for a real CA-issued cert + verify-full
+        # before running this near production.
+        - name: gen-tls-cert
+          image: alpine/openssl:latest
+          command:
+            - sh
+            - -c
+            - |
+              openssl req -new -x509 -days 3650 -nodes \
+                -subj "/CN=postgres.ledgerx.svc.cluster.local" \
+                -newkey rsa:4096 \
+                -keyout /certs/server.key \
+                -out /certs/server.crt
+              chmod 600 /certs/server.key
+              chmod 644 /certs/server.crt
+              chown 999:999 /certs/server.key /certs/server.crt
+          volumeMounts:
+            - name: postgres-certs
+              mountPath: /certs
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+              ephemeral-storage: "16Mi"
+            limits:
+              cpu: "200m"
+              memory: "64Mi"
+              ephemeral-storage: "32Mi"
       containers:
         - name: postgres
-          image: postgres:latest
+          image: postgres:18
+          command:
+            - postgres
+            - -c
+            - config_file=/etc/postgresql/postgresql.conf
+            - -c
+            - hba_file=/etc/postgresql/pg_hba.conf
           ports:
             - containerPort: 5432
               name: postgres
@@ -59,6 +97,12 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
               subPath: pgdata
+            - name: postgres-certs
+              mountPath: /var/lib/postgresql/certs
+              readOnly: true
+            - name: postgres-tuning-config
+              mountPath: /etc/postgresql
+              readOnly: true
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "ledgerx", "-d", "ledgerx"]
@@ -80,6 +124,11 @@ spec:
         - name: postgres-data
           persistentVolumeClaim:
             claimName: postgres-data
+        - name: postgres-certs
+          emptyDir: {}
+        - name: postgres-tuning-config
+          configMap:
+            name: postgres-tuning-config
 ---
 apiVersion: v1
 kind: Service
