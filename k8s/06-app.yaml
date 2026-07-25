@@ -57,6 +57,11 @@ spec:
                 configMapKeyRef:
                   name: ledgerx-config
                   key: DB_NAME
+            - name: DB_SSLMODE
+              valueFrom:
+                configMapKeyRef:
+                  name: ledgerx-config
+                  key: DB_SSLMODE
             - name: RABBITMQ_HOST
               valueFrom:
                 configMapKeyRef:
