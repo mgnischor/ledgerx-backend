@@ -2,12 +2,31 @@ spring:
   application:
     name: ledgerx-backend
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ledgerx}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ledgerx}?sslmode=${DB_SSLMODE:require}
     username: ${DB_USER:ledgerx}
     password: ${DB_PASSWORD:ledgerx}
+    hikari:
+      pool-name: ledgerx-hikari
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT_MS:30000}
+      idle-timeout: ${DB_POOL_IDLE_TIMEOUT_MS:600000}
+      max-lifetime: ${DB_POOL_MAX_LIFETIME_MS:1800000}
+      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION_MS:60000}
+      validation-timeout: 5000
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
   session:
     jdbc:
       initialize-schema: always
