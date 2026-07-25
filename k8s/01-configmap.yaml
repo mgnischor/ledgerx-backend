@@ -9,8 +9,59 @@ data:
   DB_HOST: "postgres"
   DB_PORT: "5432"
   DB_NAME: "ledgerx"
+  # Requires an encrypted connection to PostgreSQL (see the TLS init container
+  # and postgres-tuning-config ConfigMap in 03-postgres.yaml).
+  DB_SSLMODE: "require"
   RABBITMQ_HOST: "rabbitmq"
   RABBITMQ_PORT: "5672"
   SERVER_PORT: "8080"
   # Set to "false" to skip the pt-BR sample data seeder on startup.
   LEDGERX_SEED_ENABLED: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-tuning-config
+  namespace: ledgerx
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: ledgerx-backend
+data:
+  postgresql.conf: |
+    # Tuned for the postgres StatefulSet's resource limits (500m CPU / 512Mi memory,
+    # see 03-postgres.yaml). Scale these up if the limits change.
+    listen_addresses = '*'
+    max_connections = 50
+
+    ssl = on
+    ssl_cert_file = '/var/lib/postgresql/certs/server.crt'
+    ssl_key_file = '/var/lib/postgresql/certs/server.key'
+    ssl_min_protocol_version = 'TLSv1.2'
+    password_encryption = scram-sha-256
+
+    shared_buffers = 128MB
+    effective_cache_size = 384MB
+    work_mem = 4MB
+    maintenance_work_mem = 32MB
+
+    wal_buffers = 8MB
+    min_wal_size = 512MB
+    max_wal_size = 2GB
+    checkpoint_completion_target = 0.9
+
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    default_statistics_target = 100
+
+    log_connections = on
+    log_disconnections = on
+    log_min_duration_statement = 200
+  pg_hba.conf: |
+    # Only encrypted connections are accepted; SCRAM-SHA-256 password auth throughout.
+    local   all             all                                     scram-sha-256
+
+    hostnossl all           all             0.0.0.0/0               reject
+    hostnossl all           all             ::/0                    reject
+
+    hostssl ledgerx         ledgerx         0.0.0.0/0               scram-sha-256
+    hostssl ledgerx         ledgerx         ::/0                    scram-sha-256
