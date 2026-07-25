@@ -237,6 +237,43 @@ needs to trust the certificate across restarts: set `server.ssl.key-store`
 or set `ledgerx.security.tls.enabled=false` to disable TLS entirely (e.g.
 behind a TLS-terminating reverse proxy/load balancer).
 
+## Database (PostgreSQL)
+
+**Encryption in transit.** Both `compose.yaml` and the `k8s/` manifests run
+PostgreSQL with `ssl = on` and a self-signed certificate generated at
+container startup (`docker/postgres/Dockerfile` locally; a `gen-tls-cert`
+init container in `k8s/03-postgres.yaml` for Kubernetes). `pg_hba.conf`
+rejects any `hostnossl` connection outright and requires SCRAM-SHA-256
+password auth on every `hostssl` entry. The backend connects with
+`sslmode=require` (set via `DB_SSLMODE`, appended to the JDBC URL in
+`application.yaml`), so the link is always encrypted. The certificates are
+self-signed and not validated by the client (`require`, not `verify-full`),
+so they stop passive network sniffing but not an active MITM with control of
+the network path — swap in a CA-issued certificate and switch to
+`sslmode=verify-full` before running this near production.
+
+**Connection pooling.** HikariCP is tuned in `application.yaml`
+(`spring.datasource.hikari`): a bounded pool (`DB_POOL_MAX_SIZE`, default 20)
+with a minimum idle count, connection/idle/max-lifetime timeouts, and a
+60s leak-detection threshold to surface connections that are checked out
+and never returned.
+
+**JPA/Hibernate.** `spring.jpa.open-in-view` is disabled (avoids holding a
+DB connection open for the whole request/view-rendering lifecycle), and
+batched inserts/updates are enabled (`hibernate.jdbc.batch_size`,
+`order_inserts`, `order_updates`) so Hibernate coalesces writes into fewer
+round trips.
+
+**Server tuning.** `docker/postgres/postgresql.conf` (Compose) and the
+`postgres-tuning-config` ConfigMap (`k8s/01-configmap.yaml`) tune
+`shared_buffers`, `effective_cache_size`, `work_mem`, `maintenance_work_mem`,
+WAL/checkpoint settings, and the planner's `random_page_cost`/
+`effective_io_concurrency` for SSD-backed storage. The Kubernetes values are
+scaled down to fit the `postgres` StatefulSet's 512Mi memory limit
+(`k8s/03-postgres.yaml`); the Compose values assume a larger, unconstrained
+local machine. `log_min_duration_statement = 200` logs any statement slower
+than 200ms for troubleshooting.
+
 ## Sample data seeding
 
 On first startup against an empty database, `DatabaseSeeder`
@@ -297,8 +334,11 @@ docker compose up -d --build
 This starts the app together with Postgres, RabbitMQ and Grafana LGTM. The
 app container reads its datasource/RabbitMQ connection from environment
 variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`,
-`RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`), all
-defaulted in `compose.yaml`. The API is exposed on `http://localhost:8080`.
+`DB_SSLMODE`, `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USER`,
+`RABBITMQ_PASSWORD`), all defaulted in `compose.yaml`. The Postgres
+container is built from `docker/postgres/` instead of the stock image so it
+serves TLS out of the box — see [Database (PostgreSQL)](#database-postgresql).
+The API is exposed on `http://localhost:8080`.
 
 `spring.jpa.hibernate.ddl-auto` is currently set to `update` as a stopgap
 until a migration tool (Flyway/Liquibase) is introduced. `spring.session.jdbc.initialize-schema`
