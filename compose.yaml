@@ -9,6 +9,7 @@ services:
             - "DB_NAME=ledgerx"
             - "DB_USER=ledgerx"
             - "DB_PASSWORD=ledgerx"
+            - "DB_SSLMODE=require"
             - "RABBITMQ_HOST=rabbitmq"
             - "RABBITMQ_PORT=5672"
             - "RABBITMQ_USER=ledgerx"
@@ -16,8 +17,10 @@ services:
         ports:
             - "25360:8080"
         depends_on:
-            - postgres
-            - rabbitmq
+            postgres:
+                condition: service_healthy
+            rabbitmq:
+                condition: service_started
     grafana-lgtm:
         image: "grafana/otel-lgtm:latest"
         ports:
@@ -25,13 +28,20 @@ services:
             - "4317"
             - "4318"
     postgres:
-        image: "postgres:latest"
+        build:
+            context: ./docker/postgres
+            dockerfile: Dockerfile
         environment:
             - "POSTGRES_DB=ledgerx"
             - "POSTGRES_PASSWORD=ledgerx"
             - "POSTGRES_USER=ledgerx"
         ports:
             - "5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ledgerx -d ledgerx"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
     rabbitmq:
         image: "rabbitmq:latest"
         environment:
