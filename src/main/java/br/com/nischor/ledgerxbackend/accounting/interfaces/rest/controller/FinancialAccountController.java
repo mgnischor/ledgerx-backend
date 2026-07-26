@@ -49,8 +49,8 @@ public class FinancialAccountController {
         this.deactivateFinancialAccountUseCase = deactivateFinancialAccountUseCase;
     }
 
-    /** BR-044/BR-047/BR-048: name is required, opening balance cannot be negative, currency defaults to BRL. */
-    @Operation(summary = "Create a financial account", description = "BR-044/BR-047/BR-048.")
+    /** BR-038/BR-039/BR-040: name is required, opening balance cannot be negative, currency defaults to BRL. */
+    @Operation(summary = "Create a financial account", description = "BR-038/BR-039/BR-040.")
     @ApiResponse(responseCode = "201", description = "Financial account created")
     @ApiResponse(responseCode = "400", description = "Validation failure (blank name, negative balance, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
@@ -85,8 +85,8 @@ public class FinancialAccountController {
                 .orElseThrow(() -> new EntityNotFoundException(FinancialAccount.class, accountId));
     }
 
-    /** BR-051/BR-052: the account must exist; deactivating removes it from use in new transactions. */
-    @Operation(summary = "Deactivate a financial account", description = "BR-051/BR-052.")
+    /** BR-042: the account must exist; deactivating removes it from use in new transactions. */
+    @Operation(summary = "Deactivate a financial account", description = "BR-042.")
     @ApiResponse(responseCode = "200", description = "Financial account deactivated")
     @ApiResponse(responseCode = "404", description = "Financial account not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
