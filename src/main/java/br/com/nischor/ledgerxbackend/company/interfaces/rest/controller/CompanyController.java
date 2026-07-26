@@ -39,12 +39,12 @@ public class CompanyController {
     }
 
     /**
-     * BR-026..BR-040: legal name/trade name/address shape, CNPJ format+check-digit+uniqueness
+     * BR-023..BR-035: legal name/trade name/address shape, CNPJ format+check-digit+uniqueness
      * and company size enum rules are enforced by {@link CreateCompanyRequest}'s bean
      * validation constraints and {@code RegisterCompanyUseCase} before this method body runs.
      */
     @Operation(summary = "Register a new company",
-            description = "Validates CNPJ check digits, Brazilian UF and CEP format. BR-026..BR-040.")
+            description = "Validates CNPJ check digits, Brazilian UF and CEP format. BR-023..BR-035.")
     @ApiResponse(responseCode = "201", description = "Company created")
     @ApiResponse(responseCode = "400", description = "Validation failure (invalid CNPJ/UF/CEP, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
@@ -60,8 +60,8 @@ public class CompanyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    /** BR-042/BR-043: the target company must exist; deactivating twice is a no-op. */
-    @Operation(summary = "Deactivate a company", description = "Idempotent. BR-042/BR-043.")
+    /** BR-036/BR-037: the target company must exist; deactivating twice is a no-op. */
+    @Operation(summary = "Deactivate a company", description = "Idempotent. BR-036/BR-037.")
     @ApiResponse(responseCode = "200", description = "Company deactivated")
     @ApiResponse(responseCode = "404", description = "Company not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
