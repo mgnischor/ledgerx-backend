@@ -53,11 +53,11 @@ public class InvoiceController {
     }
 
     /**
-     * BR-081..BR-090: companyId/partyId/direction are required, the party must exist,
+     * BR-067..BR-074: companyId/partyId/direction are required, the party must exist,
      * installment amounts must be non-empty, positive and capped at 60, firstDueDate cannot be
      * in the past, and installments are due monthly starting on firstDueDate.
      */
-    @Operation(summary = "Issue an invoice (accounts receivable or payable)", description = "BR-081..BR-090.")
+    @Operation(summary = "Issue an invoice (accounts receivable or payable)", description = "BR-067..BR-074.")
     @ApiResponse(responseCode = "201", description = "Invoice issued")
     @ApiResponse(responseCode = "400", description = "Validation failure (empty installments, past due date, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
@@ -87,11 +87,11 @@ public class InvoiceController {
     }
 
     /**
-     * BR-091..BR-098: the invoice and installment must exist, a canceled invoice cannot receive
+     * BR-075..BR-081: the invoice and installment must exist, a canceled invoice cannot receive
      * payments, paidOn cannot be in the future, and the invoice status transitions to
      * PARTIALLY_PAID/PAID as installments are settled, publishing an event once fully paid.
      */
-    @Operation(summary = "Register a payment for an installment", description = "BR-091..BR-098.")
+    @Operation(summary = "Register a payment for an installment", description = "BR-075..BR-081.")
     @ApiResponse(responseCode = "200", description = "Payment registered")
     @ApiResponse(responseCode = "400", description = "Validation failure (future paidOn date)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
@@ -106,8 +106,8 @@ public class InvoiceController {
         return registerPaymentUseCase.execute(invoiceId, request.installmentId(), request.paidOn());
     }
 
-    /** BR-099/BR-100/BR-101: the invoice must exist, a fully paid invoice cannot be canceled, and canceling twice is a no-op. */
-    @Operation(summary = "Cancel an invoice", description = "Idempotent unless the invoice is fully paid. BR-099..BR-101.")
+    /** BR-082/BR-083/BR-084: the invoice must exist, a fully paid invoice cannot be canceled, and canceling twice is a no-op. */
+    @Operation(summary = "Cancel an invoice", description = "Idempotent unless the invoice is fully paid. BR-082..BR-084.")
     @ApiResponse(responseCode = "200", description = "Invoice canceled")
     @ApiResponse(responseCode = "404", description = "Invoice not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
