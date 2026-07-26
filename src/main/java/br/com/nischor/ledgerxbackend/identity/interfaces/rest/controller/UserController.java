@@ -58,11 +58,11 @@ public class UserController {
     }
 
     /**
-     * BR-020/BR-021: the target user must exist and the role must be one of the roles defined
+     * BR-019/BR-020: the target user must exist and the role must be one of the roles defined
      * by the {@code Role} enum (an unknown role value is rejected by Jackson before this method
      * runs, returning 400 Bad Request).
      */
-    @Operation(summary = "Grant a role to a user", description = "BR-020/BR-021.")
+    @Operation(summary = "Grant a role to a user", description = "BR-019/BR-020.")
     @ApiResponse(responseCode = "200", description = "Role granted")
     @ApiResponse(responseCode = "404", description = "User not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
@@ -71,8 +71,8 @@ public class UserController {
         return ResponseEntity.ok(grantRoleUseCase.execute(userId, request.role()));
     }
 
-    /** BR-023/BR-024: the target user must exist; deactivating twice is a no-op. */
-    @Operation(summary = "Deactivate a user", description = "Idempotent. BR-023/BR-024.")
+    /** BR-021/BR-022: the target user must exist; deactivating twice is a no-op. */
+    @Operation(summary = "Deactivate a user", description = "Idempotent. BR-021/BR-022.")
     @ApiResponse(responseCode = "200", description = "User deactivated")
     @ApiResponse(responseCode = "404", description = "User not found",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
