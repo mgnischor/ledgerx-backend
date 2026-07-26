@@ -31,12 +31,12 @@ public class TransferController {
     }
 
     /**
-     * BR-070/BR-071: source and destination accounts must be different (enforced by
+     * BR-058/BR-059: source and destination accounts must be different (enforced by
      * {@link TransferFundsRequest}'s class-level constraint) and the amount must be positive.
-     * BR-072/BR-073: both legs are debited/credited atomically, and the transfer fails if the
+     * BR-060/BR-061: both legs are debited/credited atomically, and the transfer fails if the
      * source account has insufficient balance.
      */
-    @Operation(summary = "Transfer funds between two financial accounts", description = "BR-070..BR-073.")
+    @Operation(summary = "Transfer funds between two financial accounts", description = "BR-058..BR-061.")
     @ApiResponse(responseCode = "204", description = "Transfer completed")
     @ApiResponse(responseCode = "400", description = "Validation failure (same account, non-positive amount)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
