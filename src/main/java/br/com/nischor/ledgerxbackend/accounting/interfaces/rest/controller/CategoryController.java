@@ -41,8 +41,8 @@ public class CategoryController {
         this.createCategoryUseCase = createCategoryUseCase;
     }
 
-    /** BR-053..BR-056: name is required (max 60 chars) and type must be INCOME, EXPENSE or TRANSFER. */
-    @Operation(summary = "Create a category", description = "BR-053..BR-056.")
+    /** BR-043/BR-044: name is required (max 60 chars) and type must be INCOME, EXPENSE or TRANSFER. */
+    @Operation(summary = "Create a category", description = "BR-043/BR-044.")
     @ApiResponse(responseCode = "201", description = "Category created")
     @ApiResponse(responseCode = "400", description = "Validation failure (blank name, missing type, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
