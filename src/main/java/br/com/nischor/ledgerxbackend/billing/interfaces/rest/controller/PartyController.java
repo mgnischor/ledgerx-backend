@@ -43,13 +43,13 @@ public class PartyController {
     }
 
     /**
-     * BR-074..BR-079: name, document (CPF/CNPJ check-digit, matching the declared document
+     * BR-062..BR-065: name, document (CPF/CNPJ check-digit, matching the declared document
      * type), email and party type are enforced by {@link CreatePartyRequest}'s bean validation
      * constraints, including the class-level {@code @ValidPartyDocument} check.
      */
     @Operation(summary = "Create a customer or supplier",
             description = "Document must be a valid CPF or CNPJ matching the declared documentType. "
-                    + "BR-074..BR-080.")
+                    + "BR-062..BR-065.")
     @ApiResponse(responseCode = "201", description = "Party created")
     @ApiResponse(responseCode = "400", description = "Validation failure (invalid document, invalid email, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
