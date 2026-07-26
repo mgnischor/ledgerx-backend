@@ -34,13 +34,13 @@ public class TransactionController {
     }
 
     /**
-     * BR-057..BR-067: required fields, positive amount, non-future/non-stale date and
+     * BR-045..BR-053: required fields, positive amount, non-future/non-stale date and
      * description length are enforced by {@link CreateTransactionRequest}'s bean validation
-     * constraints. BR-068: TRANSFER is rejected here explicitly since transfers must move
+     * constraints. BR-055: TRANSFER is rejected here explicitly since transfers must move
      * through {@code POST /api/v1/transfers} instead, so both legs are updated atomically.
      */
     @Operation(summary = "Record an income or expense transaction",
-            description = "TRANSFER type is rejected here; use POST /api/v1/transfers instead. BR-057..BR-069.")
+            description = "TRANSFER type is rejected here; use POST /api/v1/transfers instead. BR-045..BR-057.")
     @ApiResponse(responseCode = "201", description = "Transaction recorded")
     @ApiResponse(responseCode = "400", description = "Validation failure (non-positive amount, future date, etc.)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
