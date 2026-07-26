@@ -11,6 +11,8 @@
 [![DDD](https://img.shields.io/badge/Architecture-DDD-9B59B6)](#-architecture)
 [![Open Source](https://img.shields.io/badge/Open_Source-blue)](#-license)
 
+![LedgerX Banner](./res/banner.png)
+
 ---
 
 ## ✨ Why LedgerX?
