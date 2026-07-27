@@ -16,34 +16,74 @@ public class JwtProperties {
     private String privateKey = "";
     private String publicKey = "";
 
+    /**
+     * Returns the JWT issuer claim value.
+     *
+     * @return the configured issuer
+     */
     public String getIssuer() {
         return issuer;
     }
 
+    /**
+     * Sets the JWT issuer claim value.
+     *
+     * @param issuer the issuer to embed in issued tokens and validate on verification
+     */
     public void setIssuer(String issuer) {
         this.issuer = issuer;
     }
 
+    /**
+     * Returns the token expiration time, in seconds from issuance.
+     *
+     * @return the configured expiration time in seconds
+     */
     public long getExpirationSeconds() {
         return expirationSeconds;
     }
 
+    /**
+     * Sets the token expiration time, in seconds from issuance.
+     *
+     * @param expirationSeconds the expiration time in seconds
+     */
     public void setExpirationSeconds(long expirationSeconds) {
         this.expirationSeconds = expirationSeconds;
     }
 
+    /**
+     * Returns the configured Base64-encoded PKCS#8 Ed25519 private key.
+     *
+     * @return the configured private key, or an empty string if not set
+     */
     public String getPrivateKey() {
         return privateKey;
     }
 
+    /**
+     * Sets the Base64-encoded PKCS#8 Ed25519 private key.
+     *
+     * @param privateKey the Base64-encoded private key
+     */
     public void setPrivateKey(String privateKey) {
         this.privateKey = privateKey;
     }
 
+    /**
+     * Returns the configured Base64-encoded X.509/SPKI Ed25519 public key.
+     *
+     * @return the configured public key, or an empty string if not set
+     */
     public String getPublicKey() {
         return publicKey;
     }
 
+    /**
+     * Sets the Base64-encoded X.509/SPKI Ed25519 public key.
+     *
+     * @param publicKey the Base64-encoded public key
+     */
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
     }
