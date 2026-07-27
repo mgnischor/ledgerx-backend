@@ -19,12 +19,24 @@ public class InvoicePaidMessageListener {
 
     private static final Logger log = LoggerFactory.getLogger(InvoicePaidMessageListener.class);
 
+    /** Use case that persists the resulting notification. */
     private final CreateNotificationUseCase createNotificationUseCase;
 
+    /**
+     * Creates the listener.
+     *
+     * @param createNotificationUseCase use case invoked to persist a notification for the event
+     */
     public InvoicePaidMessageListener(CreateNotificationUseCase createNotificationUseCase) {
         this.createNotificationUseCase = createNotificationUseCase;
     }
 
+    /**
+     * Handles an {@link InvoicePaidEvent} message consumed from the invoice-paid queue by
+     * creating a corresponding {@code INVOICE_PAID} notification.
+     *
+     * @param event the invoice-paid event received from the queue
+     */
     @RabbitListener(queues = RabbitMqConfig.QUEUE_INVOICE_PAID)
     public void onMessage(InvoicePaidEvent event) {
         log.info("Received InvoicePaidEvent: invoice {} for party {}", event.invoiceId(), event.partyId());
