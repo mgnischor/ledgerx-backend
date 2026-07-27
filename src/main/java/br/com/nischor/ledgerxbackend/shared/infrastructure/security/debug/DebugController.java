@@ -23,10 +23,22 @@ public class DebugController {
 
     private final Environment environment;
 
+    /**
+     * Creates a new controller backed by the given Spring {@link Environment}.
+     *
+     * @param environment the environment used to read application name and active profiles
+     */
     public DebugController(Environment environment) {
         this.environment = environment;
     }
 
+    /**
+     * Returns runtime and build diagnostics: application name, active profiles, JVM version,
+     * uptime, and current server time. Requires the {@code PERMISSION_DEBUG} authority
+     * (granted to the {@code DEVELOPER} role).
+     *
+     * @return a {@link DebugInfoDto} describing the current runtime state
+     */
     @Operation(summary = "Get runtime/build diagnostics", description = "Requires the DEVELOPER role's debug permission.")
     @PreAuthorize(Authorizations.DEBUG)
     @GetMapping("/info")
