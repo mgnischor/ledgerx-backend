@@ -7,9 +7,18 @@ import io.swagger.v3.oas.models.info.License;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configures the OpenAPI/Swagger documentation metadata for the LedgerX Backend API.
+ */
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * Builds the {@link OpenAPI} descriptor with API title, description, version,
+     * contact and license information used to render the Swagger UI.
+     *
+     * @return the configured {@link OpenAPI} bean
+     */
     @Bean
     public OpenAPI ledgerxOpenApi() {
         return new OpenAPI()
