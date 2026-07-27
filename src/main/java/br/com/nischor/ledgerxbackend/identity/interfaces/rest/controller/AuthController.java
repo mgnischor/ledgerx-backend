@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST endpoint for authenticating users and issuing JWT access tokens.
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication", description = "Login and Ed25519-signed JWT issuance")
@@ -23,10 +26,21 @@ public class AuthController {
 
     private final LoginUseCase loginUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param loginUseCase the use case used to authenticate credentials and issue tokens.
+     */
     public AuthController(LoginUseCase loginUseCase) {
         this.loginUseCase = loginUseCase;
     }
 
+    /**
+     * Authenticates a user with email and password.
+     *
+     * @param request the login credentials.
+     * @return 200 OK with the issued access token on success.
+     */
     @Operation(summary = "Authenticate with email and password",
             description = "Returns an Ed25519-signed (EdDSA) JWT access token to use as a Bearer credential.")
     @ApiResponse(responseCode = "200", description = "Authentication successful")
