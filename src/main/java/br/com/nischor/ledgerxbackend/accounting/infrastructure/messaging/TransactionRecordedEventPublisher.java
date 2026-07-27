@@ -17,10 +17,21 @@ public class TransactionRecordedEventPublisher {
 
     private final AmqpTemplate amqpTemplate;
 
+    /**
+     * Creates the publisher.
+     *
+     * @param amqpTemplate template used to send messages to RabbitMQ
+     */
     public TransactionRecordedEventPublisher(AmqpTemplate amqpTemplate) {
         this.amqpTemplate = amqpTemplate;
     }
 
+    /**
+     * Listens for in-process {@link TransactionRecordedEvent}s and republishes them onto the
+     * {@code ledgerx.events} RabbitMQ exchange.
+     *
+     * @param event the domain event to publish
+     */
     @EventListener
     public void onTransactionRecorded(TransactionRecordedEvent event) {
         amqpTemplate.convertAndSend(RabbitMqConfig.EVENTS_EXCHANGE, RabbitMqConfig.ROUTING_KEY_TRANSACTION_RECORDED,
