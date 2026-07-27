@@ -29,6 +29,13 @@ public class JwtKeyConfig {
     private static final Logger log = LoggerFactory.getLogger(JwtKeyConfig.class);
     private static final String ALGORITHM = "Ed25519";
 
+    /**
+     * Provides the Ed25519 signing key pair used by {@link JwtService}: loads it from the
+     * configured Base64 DER keys if present, otherwise generates a fresh ephemeral key pair.
+     *
+     * @param properties the JWT configuration properties, possibly holding configured keys
+     * @return the Ed25519 {@link KeyPair} used to sign and verify JWTs
+     */
     @Bean
     public KeyPair jwtSigningKeyPair(JwtProperties properties) {
         if (!properties.getPrivateKey().isBlank() && !properties.getPublicKey().isBlank()) {
@@ -41,6 +48,14 @@ public class JwtKeyConfig {
         return generateKeyPair();
     }
 
+    /**
+     * Decodes the Base64 DER-encoded private (PKCS#8) and public (X.509/SPKI) keys configured
+     * in the given properties into an Ed25519 {@link KeyPair}.
+     *
+     * @param properties the JWT configuration properties holding the Base64-encoded keys
+     * @return the reconstructed Ed25519 key pair
+     * @throws IllegalStateException if the configured key material is invalid or malformed
+     */
     private KeyPair loadConfiguredKeyPair(JwtProperties properties) {
         try {
             var keyFactory = KeyFactory.getInstance(ALGORITHM);
@@ -55,6 +70,12 @@ public class JwtKeyConfig {
         }
     }
 
+    /**
+     * Generates a new random Ed25519 key pair.
+     *
+     * @return a freshly generated Ed25519 key pair
+     * @throws IllegalStateException if the Ed25519 algorithm is not available in this JVM
+     */
     private KeyPair generateKeyPair() {
         try {
             return KeyPairGenerator.getInstance(ALGORITHM).generateKeyPair();
