@@ -30,10 +30,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
+    /**
+     * Creates a new filter backed by the given JWT service.
+     *
+     * @param jwtService the service used to verify bearer tokens
+     */
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
     }
 
+    /**
+     * Inspects the {@code Authorization} header of the incoming request: if it carries a
+     * {@code Bearer} token, attempts to verify it and populate the {@link SecurityContextHolder}
+     * with the resulting authentication. Invalid tokens are logged at debug level and the security
+     * context is cleared, but the request is still passed down the filter chain unauthenticated.
+     * Requests without a bearer token are passed through unchanged.
+     *
+     * @param request     the incoming HTTP request
+     * @param response    the outgoing HTTP response
+     * @param filterChain the remaining filter chain to invoke
+     * @throws ServletException if an error occurs while processing the filter chain
+     * @throws IOException      if an I/O error occurs while processing the filter chain
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -52,6 +70,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Verifies the given JWT and populates the security context with an authenticated token
+     * whose granted authorities are derived from the JWT's roles (prefixed with {@code ROLE_})
+     * and permissions (prefixed with {@code PERMISSION_}).
+     *
+     * @param token the raw (unprefixed) JWT string extracted from the Authorization header
+     * @throws InvalidJwtException if the token is malformed, has an invalid signature, or has expired
+     */
     private void authenticate(String token) {
         JwtClaims claims = jwtService.verify(token);
 
