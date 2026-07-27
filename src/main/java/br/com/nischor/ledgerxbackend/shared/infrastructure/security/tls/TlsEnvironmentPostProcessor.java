@@ -32,6 +32,14 @@ public class TlsEnvironmentPostProcessor implements EnvironmentPostProcessor, Or
     private static final String CERTIFICATE_ALIAS = "ledgerx";
     private static final Duration CERTIFICATE_VALIDITY = Duration.ofDays(365);
 
+    /**
+     * Generates a self-signed TLS certificate and injects it as {@code server.ssl.*} properties,
+     * unless TLS bootstrapping is disabled ({@code ledgerx.security.tls.enabled=false}) or an
+     * explicit {@code server.ssl.key-store} is already configured.
+     *
+     * @param environment the environment to inspect and mutate with the generated SSL properties
+     * @param application the running {@link SpringApplication} (unused, required by the interface)
+     */
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         if (!environment.getProperty("ledgerx.security.tls.enabled", Boolean.class, true)) {
@@ -52,6 +60,14 @@ public class TlsEnvironmentPostProcessor implements EnvironmentPostProcessor, Or
                 sslProperties(keystore, keystorePassword)));
     }
 
+    /**
+     * Builds the {@code server.ssl.*} property map pointing at the given generated keystore,
+     * enabling TLS with protocol {@code TLS} restricted to {@code TLSv1.3,TLSv1.2}.
+     *
+     * @param keystore         the generated keystore to reference
+     * @param keystorePassword the password protecting the keystore
+     * @return a map of {@code server.ssl.*} property names to values
+     */
     private Map<String, Object> sslProperties(SelfSignedCertificateGenerator.GeneratedKeystore keystore,
             char[] keystorePassword) {
         Map<String, Object> properties = new LinkedHashMap<>();
@@ -65,12 +81,25 @@ public class TlsEnvironmentPostProcessor implements EnvironmentPostProcessor, Or
         return properties;
     }
 
+    /**
+     * Generates a random, URL-safe Base64-encoded password from 32 secure random bytes.
+     *
+     * @return a freshly generated random password
+     */
     private char[] generatePassword() {
         byte[] randomBytes = new byte[32];
         new SecureRandom().nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes).toCharArray();
     }
 
+    /**
+     * Returns the ordering value used by Spring Boot to sequence environment post processors,
+     * placed immediately after {@link ConfigDataEnvironmentPostProcessor} so that configuration
+     * files have already been loaded (allowing {@code ledgerx.security.tls.*} overrides) before
+     * this processor runs.
+     *
+     * @return {@link ConfigDataEnvironmentPostProcessor#ORDER} plus one
+     */
     @Override
     public int getOrder() {
         return ConfigDataEnvironmentPostProcessor.ORDER + 1;
