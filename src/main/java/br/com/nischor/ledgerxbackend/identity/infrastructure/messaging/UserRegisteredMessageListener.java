@@ -21,10 +21,20 @@ public class UserRegisteredMessageListener {
 
     private final CreateNotificationUseCase createNotificationUseCase;
 
+    /**
+     * Creates the listener.
+     *
+     * @param createNotificationUseCase the use case used to persist the resulting notification.
+     */
     public UserRegisteredMessageListener(CreateNotificationUseCase createNotificationUseCase) {
         this.createNotificationUseCase = createNotificationUseCase;
     }
 
+    /**
+     * Handles an incoming {@link UserRegisteredEvent} message by creating a notification.
+     *
+     * @param event the deserialized message payload.
+     */
     @RabbitListener(queues = RabbitMqConfig.QUEUE_USER_REGISTERED)
     public void onMessage(UserRegisteredEvent event) {
         log.info("Received UserRegisteredEvent: user {} ({})", event.userId(), event.email());
