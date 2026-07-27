@@ -30,6 +30,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing endpoints to create, list, retrieve, and deactivate a company's financial accounts.
+ */
 @RestController
 @RequestMapping("/api/v1/companies/{companyId}/financial-accounts")
 @Tag(name = "Financial Accounts", description = "Cash/bank accounts held by a company")
@@ -40,6 +43,14 @@ public class FinancialAccountController {
     private final CreateFinancialAccountUseCase createFinancialAccountUseCase;
     private final DeactivateFinancialAccountUseCase deactivateFinancialAccountUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param financialAccountRepository repository used to list and look up financial accounts
+     * @param financialAccountMapper mapper used to convert financial accounts into DTOs
+     * @param createFinancialAccountUseCase use case used to create a financial account
+     * @param deactivateFinancialAccountUseCase use case used to deactivate a financial account
+     */
     public FinancialAccountController(FinancialAccountRepository financialAccountRepository,
             FinancialAccountMapper financialAccountMapper, CreateFinancialAccountUseCase createFinancialAccountUseCase,
             DeactivateFinancialAccountUseCase deactivateFinancialAccountUseCase) {
@@ -49,7 +60,13 @@ public class FinancialAccountController {
         this.deactivateFinancialAccountUseCase = deactivateFinancialAccountUseCase;
     }
 
-    /** BR-038/BR-039/BR-040: name is required, opening balance cannot be negative, currency defaults to BRL. */
+    /**
+     * BR-038/BR-039/BR-040: name is required, opening balance cannot be negative, currency defaults to BRL.
+     *
+     * @param companyId the identifier of the company the account belongs to
+     * @param request the financial account creation payload
+     * @return the created financial account wrapped in a 201 response
+     */
     @Operation(summary = "Create a financial account", description = "BR-038/BR-039/BR-040.")
     @ApiResponse(responseCode = "201", description = "Financial account created")
     @ApiResponse(responseCode = "400", description = "Validation failure (blank name, negative balance, etc.)",
@@ -63,6 +80,12 @@ public class FinancialAccountController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    /**
+     * Lists all financial accounts belonging to a company.
+     *
+     * @param companyId the identifier of the company
+     * @return the list of financial accounts as DTOs
+     */
     @Operation(summary = "List financial accounts of a company")
     @ApiResponse(responseCode = "200", description = "Financial accounts listed")
     @PreAuthorize(Authorizations.READ)
@@ -73,6 +96,14 @@ public class FinancialAccountController {
                 .toList();
     }
 
+    /**
+     * Retrieves a financial account by its identifier.
+     *
+     * @param companyId the identifier of the company the account belongs to
+     * @param accountId the identifier of the financial account
+     * @return the financial account as a DTO
+     * @throws EntityNotFoundException if no financial account exists with the given identifier
+     */
     @Operation(summary = "Get a financial account by id")
     @ApiResponse(responseCode = "200", description = "Financial account found")
     @ApiResponse(responseCode = "404", description = "Financial account not found",
@@ -85,7 +116,13 @@ public class FinancialAccountController {
                 .orElseThrow(() -> new EntityNotFoundException(FinancialAccount.class, accountId));
     }
 
-    /** BR-042: the account must exist; deactivating removes it from use in new transactions. */
+    /**
+     * BR-042: the account must exist; deactivating removes it from use in new transactions.
+     *
+     * @param companyId the identifier of the company the account belongs to
+     * @param accountId the identifier of the financial account to deactivate
+     * @return the deactivated financial account as a DTO
+     */
     @Operation(summary = "Deactivate a financial account", description = "BR-042.")
     @ApiResponse(responseCode = "200", description = "Financial account deactivated")
     @ApiResponse(responseCode = "404", description = "Financial account not found",
