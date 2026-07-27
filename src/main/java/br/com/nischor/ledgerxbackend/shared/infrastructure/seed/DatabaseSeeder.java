@@ -86,6 +86,19 @@ public class DatabaseSeeder implements ApplicationRunner {
     private final Faker faker = new Faker(Locale.of("pt", "BR"));
     private final Random random = new Random();
 
+    /**
+     * Creates a new seeder wired with the repositories and password encoder needed to persist
+     * generated sample data across every bounded context.
+     *
+     * @param companyRepository          repository used to persist generated companies
+     * @param userRepository             repository used to persist generated users
+     * @param financialAccountRepository repository used to persist generated financial accounts
+     * @param categoryRepository         repository used to persist generated categories
+     * @param partyRepository            repository used to persist generated parties
+     * @param invoiceRepository          repository used to persist generated invoices
+     * @param transactionRepository      repository used to persist generated transactions
+     * @param passwordEncoder            encoder used to hash the sample users' passwords
+     */
     public DatabaseSeeder(CompanyRepository companyRepository, UserRepository userRepository,
             FinancialAccountRepository financialAccountRepository, CategoryRepository categoryRepository,
             PartyRepository partyRepository, InvoiceRepository invoiceRepository,
@@ -100,6 +113,14 @@ public class DatabaseSeeder implements ApplicationRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Entry point invoked by Spring Boot at startup. If the database already has at least one
+     * company, seeding is skipped; otherwise generates companies, users, financial accounts,
+     * categories, parties, invoices, and transactions, in that dependency order, all within a
+     * single transaction.
+     *
+     * @param args the application arguments (unused)
+     */
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
@@ -124,6 +145,12 @@ public class DatabaseSeeder implements ApplicationRunner {
                 TRANSACTION_COUNT);
     }
 
+    /**
+     * Generates and persists {@value #COMPANY_COUNT} sample companies with randomized pt-BR
+     * addresses, names and CNPJ document numbers.
+     *
+     * @return the list of persisted companies
+     */
     private List<Company> seedCompanies() {
         List<Company> companies = new ArrayList<>();
         for (int i = 0; i < COMPANY_COUNT; i++) {
@@ -136,6 +163,10 @@ public class DatabaseSeeder implements ApplicationRunner {
         return companies;
     }
 
+    /**
+     * Generates and persists {@value #USER_COUNT} sample users with randomized names, e-mails,
+     * hashed passwords, and (for roughly half of them) a randomly assigned role.
+     */
     private void seedUsers() {
         for (int i = 0; i < USER_COUNT; i++) {
             var email = new EmailAddress(faker.internet().emailAddress(faker.name().username() + i));
@@ -148,6 +179,13 @@ public class DatabaseSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Generates and persists {@value #FINANCIAL_ACCOUNT_COUNT} sample financial accounts,
+     * each assigned to a randomly chosen company with a randomized opening balance.
+     *
+     * @param companies the companies to randomly assign generated accounts to
+     * @return the persisted financial accounts grouped by owning company id
+     */
     private Map<UUID, List<FinancialAccount>> seedFinancialAccounts(List<Company> companies) {
         Map<UUID, List<FinancialAccount>> accountsByCompany = new java.util.HashMap<>();
         for (int i = 0; i < FINANCIAL_ACCOUNT_COUNT; i++) {
@@ -161,6 +199,13 @@ public class DatabaseSeeder implements ApplicationRunner {
         return accountsByCompany;
     }
 
+    /**
+     * Generates and persists {@value #CATEGORY_COUNT} sample income/expense categories
+     * (roughly one third income, two thirds expense), each assigned to a randomly chosen company.
+     *
+     * @param companies the companies to randomly assign generated categories to
+     * @return the persisted categories grouped by owning company id
+     */
     private Map<UUID, List<Category>> seedCategories(List<Company> companies) {
         Map<UUID, List<Category>> categoriesByCompany = new java.util.HashMap<>();
         for (int i = 0; i < CATEGORY_COUNT; i++) {
@@ -175,6 +220,14 @@ public class DatabaseSeeder implements ApplicationRunner {
         return categoriesByCompany;
     }
 
+    /**
+     * Generates and persists {@value #PARTY_COUNT} sample parties (customers/suppliers), each
+     * assigned to a randomly chosen company, randomly individual (CPF) or company (CNPJ), with
+     * a randomized name, document number, e-mail, and party type.
+     *
+     * @param companies the companies to randomly assign generated parties to
+     * @return the persisted parties grouped by owning company id
+     */
     private Map<UUID, List<Party>> seedParties(List<Company> companies) {
         Map<UUID, List<Party>> partiesByCompany = new java.util.HashMap<>();
         for (int i = 0; i < PARTY_COUNT; i++) {
@@ -191,6 +244,15 @@ public class DatabaseSeeder implements ApplicationRunner {
         return partiesByCompany;
     }
 
+    /**
+     * Generates and persists {@value #INVOICE_COUNT} sample invoices, each assigned to a randomly
+     * chosen company and one of its previously generated parties, with 1 to 3 randomly amounted
+     * monthly installments starting from a randomized future due date. Companies with no
+     * generated parties are skipped for a given iteration.
+     *
+     * @param companies        the companies to randomly assign generated invoices to
+     * @param partiesByCompany the previously generated parties, grouped by owning company id
+     */
     private void seedInvoices(List<Company> companies, Map<UUID, List<Party>> partiesByCompany) {
         for (int i = 0; i < INVOICE_COUNT; i++) {
             var company = randomFrom(companies);
@@ -215,6 +277,17 @@ public class DatabaseSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Generates and persists {@value #TRANSACTION_COUNT} sample transactions, each assigned to a
+     * randomly chosen company's financial account and category, applying the corresponding debit
+     * or credit to the account's balance. If a randomly chosen expense would overdraw the account,
+     * the transaction is switched to an income category from the same company when one is
+     * available, or skipped otherwise. All affected financial accounts are saved again at the end
+     * to persist their updated balances.
+     *
+     * @param accountsByCompany   the previously generated financial accounts, grouped by owning company id
+     * @param categoriesByCompany the previously generated categories, grouped by owning company id
+     */
     private void seedTransactions(Map<UUID, List<FinancialAccount>> accountsByCompany,
             Map<UUID, List<Category>> categoriesByCompany) {
         var companyIds = new ArrayList<>(accountsByCompany.keySet());
@@ -261,32 +334,76 @@ public class DatabaseSeeder implements ApplicationRunner {
         accountsByCompany.values().stream().flatMap(List::stream).forEach(financialAccountRepository::save);
     }
 
+    /**
+     * Picks a random Brazilian state abbreviation.
+     *
+     * @return a randomly chosen two-letter Brazilian state code
+     */
     private String randomState() {
         return randomFrom(BRAZILIAN_STATES);
     }
 
+    /**
+     * Generates a random Brazilian ZIP code (CEP) in the {@code NNNNN-NNN} format.
+     *
+     * @return a randomly generated CEP-formatted string
+     */
     private String randomZipCode() {
         return "%05d-%03d".formatted(faker.number().numberBetween(1000, 99999), faker.number().numberBetween(0, 999));
     }
 
+    /**
+     * Generates a random decimal amount within the given inclusive-ish range, scaled to two
+     * decimal places using {@link RoundingMode#HALF_EVEN}.
+     *
+     * @param min the lower bound of the range
+     * @param max the upper bound of the range
+     * @return a random amount between {@code min} and {@code max}
+     */
     private BigDecimal randomAmount(long min, long max) {
         double value = min + random.nextDouble() * (max - min);
         return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_EVEN);
     }
 
+    /**
+     * Picks a random element from the given list.
+     *
+     * @param values the list to pick from
+     * @param <T>    the element type
+     * @return a randomly chosen element of {@code values}
+     */
     private <T> T randomFrom(List<T> values) {
         return values.get(random.nextInt(values.size()));
     }
 
+    /**
+     * Picks a random element from the given array.
+     *
+     * @param values the array to pick from
+     * @param <T>    the element type
+     * @return a randomly chosen element of {@code values}
+     */
     private <T> T randomFrom(T[] values) {
         return values[random.nextInt(values.length)];
     }
 
+    /**
+     * Picks a random value among the given enum constants.
+     *
+     * @param values the enum constants to pick from
+     * @param <T>    the enum type
+     * @return a randomly chosen constant from {@code values}
+     */
     @SafeVarargs
     private <T extends Enum<T>> T randomEnum(T... values) {
         return values[random.nextInt(values.length)];
     }
 
+    /**
+     * Generates a random, check-digit-valid CPF (11 digits).
+     *
+     * @return a randomly generated, structurally valid CPF number
+     */
     private String randomCpf() {
         int[] base = random.ints(9, 0, 10).toArray();
         int firstCheckDigit = weightedCheckDigit(base, 10);
@@ -295,6 +412,11 @@ public class DatabaseSeeder implements ApplicationRunner {
         return digitsToString(appendDigit(withFirst, secondCheckDigit));
     }
 
+    /**
+     * Generates a random, check-digit-valid CNPJ (14 digits).
+     *
+     * @return a randomly generated, structurally valid CNPJ number
+     */
     private String randomCnpj() {
         int[] base = random.ints(12, 0, 10).toArray();
         int firstCheckDigit = weightedCheckDigit(base, new int[]{5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2});
@@ -303,6 +425,14 @@ public class DatabaseSeeder implements ApplicationRunner {
         return digitsToString(appendDigit(withFirst, secondCheckDigit));
     }
 
+    /**
+     * Computes a check digit using the CPF-style weighting scheme, where weights start at
+     * {@code startingWeight} and decrease by one for each subsequent digit.
+     *
+     * @param digits         the digits to compute the check digit over
+     * @param startingWeight the weight applied to the first digit
+     * @return the computed check digit (0-9)
+     */
     private static int weightedCheckDigit(int[] digits, int startingWeight) {
         int sum = 0;
         int weight = startingWeight;
@@ -313,6 +443,14 @@ public class DatabaseSeeder implements ApplicationRunner {
         return remainder < 2 ? 0 : 11 - remainder;
     }
 
+    /**
+     * Computes a check digit using the CNPJ-style weighting scheme, where each digit is
+     * multiplied by its corresponding entry in {@code weights}.
+     *
+     * @param digits  the digits to compute the check digit over
+     * @param weights the per-digit weights, must be the same length as {@code digits}
+     * @return the computed check digit (0-9)
+     */
     private static int weightedCheckDigit(int[] digits, int[] weights) {
         int sum = 0;
         for (int i = 0; i < weights.length; i++) {
@@ -322,6 +460,13 @@ public class DatabaseSeeder implements ApplicationRunner {
         return remainder < 2 ? 0 : 11 - remainder;
     }
 
+    /**
+     * Returns a new array containing all of {@code digits} followed by {@code digit}.
+     *
+     * @param digits the original digits
+     * @param digit  the digit to append
+     * @return a new array with {@code digit} appended
+     */
     private static int[] appendDigit(int[] digits, int digit) {
         int[] result = new int[digits.length + 1];
         System.arraycopy(digits, 0, result, 0, digits.length);
@@ -329,6 +474,12 @@ public class DatabaseSeeder implements ApplicationRunner {
         return result;
     }
 
+    /**
+     * Concatenates the given digits into their decimal string representation.
+     *
+     * @param digits the digits to concatenate
+     * @return the digits joined together as a string
+     */
     private static String digitsToString(int[] digits) {
         var builder = new StringBuilder(digits.length);
         for (int digit : digits) {
