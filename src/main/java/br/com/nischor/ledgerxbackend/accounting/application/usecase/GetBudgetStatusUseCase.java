@@ -9,17 +9,34 @@ import br.com.nischor.ledgerxbackend.shared.domain.valueobject.Money;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/**
+ * Computes the current spending status of a budget by summing the transactions posted to its category during
+ * its period and comparing that total against the budget's limit.
+ */
 @Service
 public class GetBudgetStatusUseCase {
 
     private final BudgetRepository budgetRepository;
     private final TransactionRepository transactionRepository;
 
+    /**
+     * Creates the use case.
+     *
+     * @param budgetRepository repository used to look up the budget
+     * @param transactionRepository repository used to find transactions posted within the budget's period
+     */
     public GetBudgetStatusUseCase(BudgetRepository budgetRepository, TransactionRepository transactionRepository) {
         this.budgetRepository = budgetRepository;
         this.transactionRepository = transactionRepository;
     }
 
+    /**
+     * Computes the spending status of the given budget.
+     *
+     * @param budgetId the identifier of the budget to evaluate
+     * @return a DTO describing the limit, amount spent, remaining amount, and whether the budget is over spent
+     * @throws EntityNotFoundException if no budget exists with the given identifier
+     */
     public BudgetStatusDto execute(UUID budgetId) {
         var budget = budgetRepository.findById(budgetId)
                 .orElseThrow(() -> new EntityNotFoundException(Budget.class, budgetId));
