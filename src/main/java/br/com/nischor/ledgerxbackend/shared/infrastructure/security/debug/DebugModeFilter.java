@@ -20,6 +20,18 @@ public class DebugModeFilter extends OncePerRequestFilter {
 
     private static final String DEBUG_AUTHORITY = "PERMISSION_DEBUG";
 
+    /**
+     * Passes the request through unchanged unless the authenticated caller holds the
+     * {@code PERMISSION_DEBUG} authority; in that case, attaches an {@code X-Debug-Request-Id}
+     * header before invoking the chain and, if the response has not already been committed,
+     * an {@code X-Debug-Duration-Ms} header measuring the request's processing time afterwards.
+     *
+     * @param request     the incoming HTTP request
+     * @param response    the outgoing HTTP response
+     * @param filterChain the remaining filter chain to invoke
+     * @throws ServletException if an error occurs while processing the filter chain
+     * @throws IOException      if an I/O error occurs while processing the filter chain
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -41,6 +53,13 @@ public class DebugModeFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * Checks whether the currently authenticated caller (if any) holds the
+     * {@code PERMISSION_DEBUG} authority.
+     *
+     * @return {@code true} if there is an authentication in the security context that grants
+     *         {@code PERMISSION_DEBUG}, {@code false} otherwise
+     */
     private boolean hasDebugPermission() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.getAuthorities().stream()
