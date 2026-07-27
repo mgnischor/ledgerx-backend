@@ -49,6 +49,18 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 @EnableConfigurationProperties(OAuth2AuthorizationServerProperties.class)
 public class AuthorizationServerConfig {
 
+    /**
+     * Builds the higher-priority security filter chain matched only against the OAuth2
+     * Authorization Server endpoints (e.g. {@code /oauth2/authorize}, {@code /oauth2/token}):
+     * applies the default {@link OAuth2AuthorizationServerConfigurer}, disables CSRF checks for
+     * those endpoints (they are protected by PKCE and client authentication instead), requires
+     * authentication for all matched requests, and redirects unauthenticated browser requests to
+     * {@code /login}.
+     *
+     * @param http the {@link HttpSecurity} builder to configure
+     * @return the built {@link SecurityFilterChain} restricted to the authorization server endpoints
+     * @throws Exception if the security configuration cannot be built
+     */
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -66,6 +78,14 @@ public class AuthorizationServerConfig {
         return http.build();
     }
 
+    /**
+     * Registers the single first-party OAuth2 client used by the Authorization Code + PKCE flow:
+     * a public client (no client secret) requiring proof key (PKCE) and explicit user consent,
+     * configured with the redirect URIs, scopes, and token TTLs from the given properties.
+     *
+     * @param properties the OAuth2 authorization server configuration properties
+     * @return an in-memory {@link RegisteredClientRepository} containing the configured client
+     */
     @Bean
     public RegisteredClientRepository registeredClientRepository(OAuth2AuthorizationServerProperties properties) {
         var clientSettings = ClientSettings.builder()
@@ -92,11 +112,24 @@ public class AuthorizationServerConfig {
         return new InMemoryRegisteredClientRepository(clientBuilder.build());
     }
 
+    /**
+     * Builds the authorization server settings, configuring the issuer URI advertised in
+     * discovery metadata and issued tokens.
+     *
+     * @param properties the OAuth2 authorization server configuration properties
+     * @return the configured {@link AuthorizationServerSettings}
+     */
     @Bean
     public AuthorizationServerSettings authorizationServerSettings(OAuth2AuthorizationServerProperties properties) {
         return AuthorizationServerSettings.builder().issuer(properties.getIssuer()).build();
     }
 
+    /**
+     * Provides the JWK source used by the authorization server to sign issued tokens, backed by
+     * a freshly generated RSA key pair wrapped in a single-key {@link JWKSet}.
+     *
+     * @return the {@link JWKSource} exposing the RSA signing key
+     */
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
         RSAKey rsaKey = generateRsaKey();
@@ -104,6 +137,12 @@ public class AuthorizationServerConfig {
         return new ImmutableJWKSet<>(jwkSet);
     }
 
+    /**
+     * Generates a new 2048-bit RSA key pair and wraps it as a {@link RSAKey} JWK with a random key ID.
+     *
+     * @return the generated RSA JWK, including both public and private key material
+     * @throws IllegalStateException if RSA is not available in this JVM
+     */
     private RSAKey generateRsaKey() {
         KeyPair keyPair;
         try {
