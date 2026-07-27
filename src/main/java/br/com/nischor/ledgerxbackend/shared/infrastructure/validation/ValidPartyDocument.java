@@ -17,9 +17,24 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = PartyDocumentValidator.class)
 public @interface ValidPartyDocument {
 
+    /**
+     * The error message reported when the document does not match the declared document type.
+     *
+     * @return the validation error message template
+     */
     String message() default "document does not match a valid CPF/CNPJ for the declared document type";
 
+    /**
+     * Validation groups this constraint belongs to.
+     *
+     * @return the validation groups
+     */
     Class<?>[] groups() default {};
 
+    /**
+     * Payload types that can be attached to this constraint.
+     *
+     * @return the payload types
+     */
     Class<? extends Payload>[] payload() default {};
 }
