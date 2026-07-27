@@ -34,6 +34,13 @@ public class NotificationController {
     private final NotificationMapper notificationMapper;
     private final MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param notificationRepository       repository used to read notifications.
+     * @param notificationMapper           mapper used to convert notifications to DTOs.
+     * @param markNotificationAsReadUseCase use case invoked to mark a notification as read.
+     */
     public NotificationController(NotificationRepository notificationRepository,
             NotificationMapper notificationMapper, MarkNotificationAsReadUseCase markNotificationAsReadUseCase) {
         this.notificationRepository = notificationRepository;
@@ -41,7 +48,13 @@ public class NotificationController {
         this.markNotificationAsReadUseCase = markNotificationAsReadUseCase;
     }
 
-    /** BR-116: results are ordered most-recent first; {@code unreadOnly=true} filters out read notifications. */
+    /**
+     * Lists notifications. BR-116: results are ordered most-recent first;
+     * {@code unreadOnly=true} filters out read notifications.
+     *
+     * @param unreadOnly when {@code true}, only unread notifications are returned.
+     * @return the matching notifications, most recent first.
+     */
     @Operation(summary = "List notifications", description = "BR-116.")
     @ApiResponse(responseCode = "200", description = "Notifications listed, most recent first")
     @GetMapping
@@ -51,7 +64,15 @@ public class NotificationController {
         return notifications.stream().map(notificationMapper::toDto).toList();
     }
 
-    /** BR-117: marking as read is idempotent; marking an already-read notification again is a no-op. */
+    /**
+     * Marks a notification as read. BR-117: marking as read is idempotent; marking an
+     * already-read notification again is a no-op.
+     *
+     * @param notificationId identifier of the notification to mark as read.
+     * @return the updated notification.
+     * @throws br.com.nischor.ledgerxbackend.shared.domain.exception.EntityNotFoundException
+     *         if no notification exists with the given identifier.
+     */
     @Operation(summary = "Mark a notification as read", description = "BR-117.")
     @ApiResponse(responseCode = "200", description = "Notification marked as read")
     @ApiResponse(responseCode = "404", description = "Notification not found",
