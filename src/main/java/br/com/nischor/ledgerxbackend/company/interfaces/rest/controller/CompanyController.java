@@ -24,6 +24,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing endpoints to register and deactivate companies (tenants) under
+ * {@code /api/v1/companies}.
+ */
 @RestController
 @RequestMapping("/api/v1/companies")
 @Tag(name = "Companies", description = "Company (tenant) registration and lifecycle")
@@ -32,6 +36,12 @@ public class CompanyController {
     private final RegisterCompanyUseCase registerCompanyUseCase;
     private final DeactivateCompanyUseCase deactivateCompanyUseCase;
 
+    /**
+     * Creates the controller with its required use cases.
+     *
+     * @param registerCompanyUseCase use case handling company registration
+     * @param deactivateCompanyUseCase use case handling company deactivation
+     */
     public CompanyController(RegisterCompanyUseCase registerCompanyUseCase,
             DeactivateCompanyUseCase deactivateCompanyUseCase) {
         this.registerCompanyUseCase = registerCompanyUseCase;
@@ -39,9 +49,14 @@ public class CompanyController {
     }
 
     /**
-     * BR-023..BR-035: legal name/trade name/address shape, CNPJ format+check-digit+uniqueness
+     * Handles {@code POST /api/v1/companies} to register a new company.
+     *
+     * <p>BR-023..BR-035: legal name/trade name/address shape, CNPJ format+check-digit+uniqueness
      * and company size enum rules are enforced by {@link CreateCompanyRequest}'s bean
      * validation constraints and {@code RegisterCompanyUseCase} before this method body runs.
+     *
+     * @param request validated request body with the company's registration data
+     * @return a {@code 201 Created} response with the registered company as a {@link CompanyDto}
      */
     @Operation(summary = "Register a new company",
             description = "Validates CNPJ check digits, Brazilian UF and CEP format. BR-023..BR-035.")
@@ -60,7 +75,14 @@ public class CompanyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    /** BR-036/BR-037: the target company must exist; deactivating twice is a no-op. */
+    /**
+     * Handles {@code PATCH /api/v1/companies/{companyId}/deactivate} to deactivate a company.
+     *
+     * <p>BR-036/BR-037: the target company must exist; deactivating twice is a no-op.
+     *
+     * @param companyId identifier of the company to deactivate, taken from the path
+     * @return a {@code 200 OK} response with the deactivated company as a {@link CompanyDto}
+     */
     @Operation(summary = "Deactivate a company", description = "Idempotent. BR-036/BR-037.")
     @ApiResponse(responseCode = "200", description = "Company deactivated")
     @ApiResponse(responseCode = "404", description = "Company not found",
