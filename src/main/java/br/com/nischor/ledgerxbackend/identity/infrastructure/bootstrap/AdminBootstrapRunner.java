@@ -35,6 +35,13 @@ public class AdminBootstrapRunner implements ApplicationRunner {
     private final PasswordEncoder passwordEncoder;
     private final AdminBootstrapProperties properties;
 
+    /**
+     * Creates the runner.
+     *
+     * @param userRepository  the repository used to check for and persist the bootstrap admin account.
+     * @param passwordEncoder the encoder used to hash the configured password.
+     * @param properties      the configuration for the bootstrap admin account.
+     */
     public AdminBootstrapRunner(UserRepository userRepository, PasswordEncoder passwordEncoder,
             AdminBootstrapProperties properties) {
         this.userRepository = userRepository;
@@ -42,6 +49,12 @@ public class AdminBootstrapRunner implements ApplicationRunner {
         this.properties = properties;
     }
 
+    /**
+     * Creates the DEVELOPER bootstrap account if no user with the configured email already
+     * exists. No-op otherwise.
+     *
+     * @param args the application startup arguments (unused).
+     */
     @Override
     public void run(ApplicationArguments args) {
         var email = new EmailAddress(properties.getEmail());
