@@ -21,10 +21,21 @@ public class TransactionRecordedMessageListener {
 
     private final CreateNotificationUseCase createNotificationUseCase;
 
+    /**
+     * Creates the listener.
+     *
+     * @param createNotificationUseCase use case used to persist a notification for the received event
+     */
     public TransactionRecordedMessageListener(CreateNotificationUseCase createNotificationUseCase) {
         this.createNotificationUseCase = createNotificationUseCase;
     }
 
+    /**
+     * Handles a {@link TransactionRecordedEvent} message consumed from the queue by logging it and creating a
+     * corresponding notification.
+     *
+     * @param event the deserialized transaction-recorded event
+     */
     @RabbitListener(queues = RabbitMqConfig.QUEUE_TRANSACTION_RECORDED)
     public void onMessage(TransactionRecordedEvent event) {
         log.info("Received TransactionRecordedEvent: transaction {} on account {} ({} {})",
