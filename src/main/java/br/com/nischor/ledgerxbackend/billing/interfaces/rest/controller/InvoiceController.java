@@ -31,6 +31,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing endpoints to issue invoices, register installment payments and
+ * cancel invoices for accounts receivable/payable.
+ */
 @RestController
 @RequestMapping("/api/v1/invoices")
 @Tag(name = "Invoices", description = "Accounts receivable/payable invoices and their installments")
@@ -42,6 +46,15 @@ public class InvoiceController {
     private final InvoiceRepository invoiceRepository;
     private final InvoiceMapper invoiceMapper;
 
+    /**
+     * Creates the controller.
+     *
+     * @param issueInvoiceUseCase use case used to issue new invoices
+     * @param registerPaymentUseCase use case used to register installment payments
+     * @param cancelInvoiceUseCase use case used to cancel invoices
+     * @param invoiceRepository repository used to look up invoices for read-only endpoints
+     * @param invoiceMapper mapper used to convert invoices to their DTO representation
+     */
     public InvoiceController(IssueInvoiceUseCase issueInvoiceUseCase, RegisterPaymentUseCase registerPaymentUseCase,
             CancelInvoiceUseCase cancelInvoiceUseCase, InvoiceRepository invoiceRepository,
             InvoiceMapper invoiceMapper) {
@@ -53,9 +66,14 @@ public class InvoiceController {
     }
 
     /**
-     * BR-067..BR-074: companyId/partyId/direction are required, the party must exist,
+     * Handles {@code POST /api/v1/invoices} to issue a new invoice with its installments.
+     *
+     * <p>BR-067..BR-074: companyId/partyId/direction are required, the party must exist,
      * installment amounts must be non-empty, positive and capped at 60, firstDueDate cannot be
      * in the past, and installments are due monthly starting on firstDueDate.
+     *
+     * @param request the validated request body describing the invoice to issue
+     * @return a {@code 201 Created} response with the issued invoice
      */
     @Operation(summary = "Issue an invoice (accounts receivable or payable)", description = "BR-067..BR-074.")
     @ApiResponse(responseCode = "201", description = "Invoice issued")
@@ -74,6 +92,13 @@ public class InvoiceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    /**
+     * Handles {@code GET /api/v1/invoices/{invoiceId}} to retrieve an invoice by its identifier.
+     *
+     * @param invoiceId the identifier of the invoice to retrieve
+     * @return the matching invoice as a DTO
+     * @throws EntityNotFoundException if no invoice with the given identifier exists
+     */
     @Operation(summary = "Get an invoice by id")
     @ApiResponse(responseCode = "200", description = "Invoice found")
     @ApiResponse(responseCode = "404", description = "Invoice not found",
@@ -87,9 +112,16 @@ public class InvoiceController {
     }
 
     /**
-     * BR-075..BR-081: the invoice and installment must exist, a canceled invoice cannot receive
+     * Handles {@code PATCH /api/v1/invoices/{invoiceId}/payments} to register a payment for one
+     * of the invoice's installments.
+     *
+     * <p>BR-075..BR-081: the invoice and installment must exist, a canceled invoice cannot receive
      * payments, paidOn cannot be in the future, and the invoice status transitions to
      * PARTIALLY_PAID/PAID as installments are settled, publishing an event once fully paid.
+     *
+     * @param invoiceId the identifier of the invoice to register the payment against
+     * @param request the validated request body identifying the installment and payment date
+     * @return the updated invoice as a DTO
      */
     @Operation(summary = "Register a payment for an installment", description = "BR-075..BR-081.")
     @ApiResponse(responseCode = "200", description = "Payment registered")
@@ -106,7 +138,15 @@ public class InvoiceController {
         return registerPaymentUseCase.execute(invoiceId, request.installmentId(), request.paidOn());
     }
 
-    /** BR-082/BR-083/BR-084: the invoice must exist, a fully paid invoice cannot be canceled, and canceling twice is a no-op. */
+    /**
+     * Handles {@code PATCH /api/v1/invoices/{invoiceId}/cancel} to cancel an invoice.
+     *
+     * <p>BR-082/BR-083/BR-084: the invoice must exist, a fully paid invoice cannot be canceled,
+     * and canceling twice is a no-op.
+     *
+     * @param invoiceId the identifier of the invoice to cancel
+     * @return the canceled invoice as a DTO
+     */
     @Operation(summary = "Cancel an invoice", description = "Idempotent unless the invoice is fully paid. BR-082..BR-084.")
     @ApiResponse(responseCode = "200", description = "Invoice canceled")
     @ApiResponse(responseCode = "404", description = "Invoice not found",
