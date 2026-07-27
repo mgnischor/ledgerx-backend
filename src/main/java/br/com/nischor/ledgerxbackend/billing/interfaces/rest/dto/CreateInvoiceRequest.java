@@ -10,6 +10,16 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Request payload to issue a new invoice, carrying the owning company, counterparty, direction
+ * (receivable/payable), the amounts of each installment and the first installment's due date.
+ *
+ * @param companyId identifier of the company issuing the invoice; must not be {@code null}
+ * @param partyId identifier of the counterparty; must not be {@code null}
+ * @param direction whether the invoice is receivable or payable; must not be {@code null}
+ * @param installmentAmounts amounts of each installment, in order; must be non-empty and at most 60 entries
+ * @param firstDueDate due date of the first installment; must not be {@code null} and not be in the past
+ */
 public record CreateInvoiceRequest(
         @NotNull UUID companyId,
         @NotNull UUID partyId,
