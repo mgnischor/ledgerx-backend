@@ -20,10 +20,25 @@ public class LedgerxUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    /**
+     * Creates the service.
+     *
+     * @param userRepository the repository used to look up the user by email.
+     */
     public LedgerxUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Loads a {@link UserDetails} for the given email, exposing {@code ROLE_*} authorities for
+     * each granted {@code Role} and {@code PERMISSION_*} authorities for each permission derived
+     * from those roles via {@link RolePermissions}.
+     *
+     * @param email the username, which is the user's email address.
+     * @return the corresponding Spring Security user details.
+     * @throws UsernameNotFoundException if no user exists for the given email, or the email is
+     *                                    not a valid {@link EmailAddress}.
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user;
