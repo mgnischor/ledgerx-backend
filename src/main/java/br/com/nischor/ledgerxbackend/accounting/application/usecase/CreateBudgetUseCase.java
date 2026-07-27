@@ -14,6 +14,10 @@ import java.time.YearMonth;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/**
+ * Creates a new budget for a category and monthly period, ensuring the category is an expense category and that
+ * no duplicate budget already exists for the same period.
+ */
 @Service
 public class CreateBudgetUseCase {
 
@@ -21,6 +25,13 @@ public class CreateBudgetUseCase {
     private final CategoryRepository categoryRepository;
     private final BudgetMapper budgetMapper;
 
+    /**
+     * Creates the use case.
+     *
+     * @param budgetRepository repository used to persist and look up budgets
+     * @param categoryRepository repository used to look up the target category
+     * @param budgetMapper mapper used to convert the saved budget into a DTO
+     */
     public CreateBudgetUseCase(BudgetRepository budgetRepository, CategoryRepository categoryRepository,
             BudgetMapper budgetMapper) {
         this.budgetRepository = budgetRepository;
@@ -28,6 +39,18 @@ public class CreateBudgetUseCase {
         this.budgetMapper = budgetMapper;
     }
 
+    /**
+     * Creates a budget limiting spending on a category for a given period.
+     *
+     * @param companyId the identifier of the company the budget belongs to
+     * @param categoryId the identifier of the category the budget applies to
+     * @param period the year and month the budget covers
+     * @param limit the maximum amount allowed to be spent in the period
+     * @return the created budget as a DTO
+     * @throws EntityNotFoundException if no category exists with the given identifier
+     * @throws BusinessRuleViolationException if the category is not an expense category, or a budget for the same
+     *         category and period already exists
+     */
     public BudgetDto execute(UUID companyId, UUID categoryId, YearMonth period, Money limit) {
         var category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new EntityNotFoundException(Category.class, categoryId));
