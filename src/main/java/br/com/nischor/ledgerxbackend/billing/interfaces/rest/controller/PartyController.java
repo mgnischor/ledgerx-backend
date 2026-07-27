@@ -26,6 +26,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing endpoints to create and list the customers/suppliers (parties) of a
+ * company.
+ */
 @RestController
 @RequestMapping("/api/v1/companies/{companyId}/parties")
 @Tag(name = "Parties", description = "Customers and suppliers a company transacts with")
@@ -35,6 +39,13 @@ public class PartyController {
     private final PartyMapper partyMapper;
     private final CreatePartyUseCase createPartyUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param partyRepository repository used to look up parties for read-only endpoints
+     * @param partyMapper mapper used to convert parties to their DTO representation
+     * @param createPartyUseCase use case used to create new parties
+     */
     public PartyController(PartyRepository partyRepository, PartyMapper partyMapper,
             CreatePartyUseCase createPartyUseCase) {
         this.partyRepository = partyRepository;
@@ -43,9 +54,16 @@ public class PartyController {
     }
 
     /**
-     * BR-062..BR-065: name, document (CPF/CNPJ check-digit, matching the declared document
+     * Handles {@code POST /api/v1/companies/{companyId}/parties} to create a customer or
+     * supplier for the given company.
+     *
+     * <p>BR-062..BR-065: name, document (CPF/CNPJ check-digit, matching the declared document
      * type), email and party type are enforced by {@link CreatePartyRequest}'s bean validation
      * constraints, including the class-level {@code @ValidPartyDocument} check.
+     *
+     * @param companyId the identifier of the company the party will belong to
+     * @param request the validated request body describing the party to create
+     * @return a {@code 201 Created} response with the created party
      */
     @Operation(summary = "Create a customer or supplier",
             description = "Document must be a valid CPF or CNPJ matching the declared documentType. "
@@ -64,6 +82,12 @@ public class PartyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    /**
+     * Handles {@code GET /api/v1/companies/{companyId}/parties} to list all parties of a company.
+     *
+     * @param companyId the identifier of the company whose parties are listed
+     * @return the parties belonging to the company, as DTOs
+     */
     @Operation(summary = "List parties of a company")
     @ApiResponse(responseCode = "200", description = "Parties listed")
     @PreAuthorize(Authorizations.READ)
