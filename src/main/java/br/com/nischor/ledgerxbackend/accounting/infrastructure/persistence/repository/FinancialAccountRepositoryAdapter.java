@@ -8,12 +8,23 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Adapter implementing {@link FinancialAccountRepository} on top of Spring Data JPA, translating between
+ * domain {@link FinancialAccount} objects and {@link FinancialAccountJpaEntity} instances via
+ * {@link FinancialAccountJpaMapper}.
+ */
 @Repository
 public class FinancialAccountRepositoryAdapter implements FinancialAccountRepository {
 
     private final FinancialAccountJpaRepository jpaRepository;
     private final FinancialAccountJpaMapper mapper;
 
+    /**
+     * Creates the adapter.
+     *
+     * @param jpaRepository the underlying Spring Data JPA repository
+     * @param mapper mapper used to convert between domain and persistence representations
+     */
     public FinancialAccountRepositoryAdapter(FinancialAccountJpaRepository jpaRepository,
             FinancialAccountJpaMapper mapper) {
         this.jpaRepository = jpaRepository;
