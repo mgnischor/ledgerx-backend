@@ -32,6 +32,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing endpoints to create, list, deactivate, and generate due transactions from recurring
+ * transaction rules.
+ */
 @RestController
 @RequestMapping("/api/v1/companies/{companyId}/recurring-transactions")
 @Tag(name = "Recurring Transactions",
@@ -45,6 +49,15 @@ public class RecurringTransactionRuleController {
     private final DeactivateRecurringTransactionRuleUseCase deactivateRecurringTransactionRuleUseCase;
     private final GenerateDueRecurringTransactionsUseCase generateDueRecurringTransactionsUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param recurringTransactionRuleRepository repository used to list recurring transaction rules
+     * @param mapper mapper used to convert rules into DTOs
+     * @param createRecurringTransactionRuleUseCase use case used to create a rule
+     * @param deactivateRecurringTransactionRuleUseCase use case used to deactivate a rule
+     * @param generateDueRecurringTransactionsUseCase use case used to generate transactions from due rules
+     */
     public RecurringTransactionRuleController(
             RecurringTransactionRuleRepository recurringTransactionRuleRepository,
             RecurringTransactionRuleMapper mapper,
@@ -64,6 +77,11 @@ public class RecurringTransactionRuleController {
      * required and cannot be in the past. BR-111: the referenced category must exist and its type
      * must match the rule's type. BR-112: TRANSFER is rejected, matching the single-account
      * transaction endpoint.
+     *
+     * @param companyId the identifier of the company the rule belongs to
+     * @param request the recurring transaction rule creation payload
+     * @return the created rule wrapped in a 201 response
+     * @throws BusinessRuleViolationException if the requested transaction type is {@code TRANSFER}
      */
     @Operation(summary = "Create a recurring transaction rule", description = "BR-107..BR-112.")
     @ApiResponse(responseCode = "201", description = "Recurring transaction rule created")
@@ -89,6 +107,12 @@ public class RecurringTransactionRuleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    /**
+     * Lists all recurring transaction rules belonging to a company.
+     *
+     * @param companyId the identifier of the company
+     * @return the list of recurring transaction rules as DTOs
+     */
     @Operation(summary = "List recurring transaction rules of a company")
     @ApiResponse(responseCode = "200", description = "Recurring transaction rules listed")
     @PreAuthorize(Authorizations.READ)
@@ -101,6 +125,9 @@ public class RecurringTransactionRuleController {
      * BR-113: every active rule whose {@code nextOccurrence} is on or before today is
      * materialized into a real transaction (through {@code RecordTransactionUseCase}, so the same
      * balance rules apply) and advanced to its next occurrence.
+     *
+     * @param companyId the identifier of the company whose rules should be processed
+     * @return the list of transactions generated from due rules, as DTOs
      */
     @Operation(summary = "Generate transactions for every rule that is currently due",
             description = "BR-113. Safe to call repeatedly (e.g. from a daily scheduler); rules that "
@@ -112,7 +139,13 @@ public class RecurringTransactionRuleController {
         return generateDueRecurringTransactionsUseCase.execute(companyId);
     }
 
-    /** BR-114: deactivating a rule stops it from being included in future generate-due runs. */
+    /**
+     * BR-114: deactivating a rule stops it from being included in future generate-due runs.
+     *
+     * @param companyId the identifier of the company the rule belongs to
+     * @param ruleId the identifier of the rule to deactivate
+     * @return the deactivated rule as a DTO
+     */
     @Operation(summary = "Deactivate a recurring transaction rule", description = "BR-114.")
     @ApiResponse(responseCode = "200", description = "Recurring transaction rule deactivated")
     @ApiResponse(responseCode = "404", description = "Recurring transaction rule not found",
