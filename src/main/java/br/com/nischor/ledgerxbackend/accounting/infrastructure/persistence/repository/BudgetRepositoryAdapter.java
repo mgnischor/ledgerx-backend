@@ -9,12 +9,22 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Adapter implementing {@link BudgetRepository} on top of Spring Data JPA, translating between domain
+ * {@link Budget} objects and {@link BudgetJpaEntity} instances via {@link BudgetJpaMapper}.
+ */
 @Repository
 public class BudgetRepositoryAdapter implements BudgetRepository {
 
     private final BudgetJpaRepository jpaRepository;
     private final BudgetJpaMapper mapper;
 
+    /**
+     * Creates the adapter.
+     *
+     * @param jpaRepository the underlying Spring Data JPA repository
+     * @param mapper mapper used to convert between domain and persistence representations
+     */
     public BudgetRepositoryAdapter(BudgetJpaRepository jpaRepository, BudgetJpaMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
