@@ -21,23 +21,44 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing read-only financial reports for a company.
+ *
+ * <p>Currently provides a cash-flow summary endpoint that aggregates income and expense
+ * transactions over a bounded date range.
+ */
 @RestController
 @RequestMapping("/api/v1/companies/{companyId}/reports")
 @Tag(name = "Reports", description = "Read-only cash-flow and financial reports")
 public class ReportController {
 
+    /** Maximum allowed span, in days, between {@code from} and {@code to} for a report request. */
     private static final long MAX_RANGE_DAYS = 366;
 
     private final CashFlowReportService cashFlowReportService;
 
+    /**
+     * Creates a new {@code ReportController}.
+     *
+     * @param cashFlowReportService service used to compute cash-flow summaries
+     */
     public ReportController(CashFlowReportService cashFlowReportService) {
         this.cashFlowReportService = cashFlowReportService;
     }
 
     /**
-     * BR-086..BR-088: {@code from} and {@code to} are required (missing/malformed query params
+     * Returns a cash-flow summary for the given company over the requested period.
+     *
+     * <p>BR-086..BR-088: {@code from} and {@code to} are required (missing/malformed query params
      * are rejected by Spring's binding before this method runs, returning 400 Bad Request);
      * {@code from} must not be after {@code to}, and the window cannot exceed 366 days.
+     *
+     * @param companyId identifier of the company the report is scoped to
+     * @param from      start date of the reporting period (inclusive)
+     * @param to        end date of the reporting period (inclusive)
+     * @return the computed {@link CashFlowSummary} for the requested period
+     * @throws BusinessRuleViolationException if {@code from} is after {@code to}, or the period
+     *                                         spans more than {@value #MAX_RANGE_DAYS} days
      */
     @Operation(summary = "Get a cash-flow summary for a period",
             description = "Only INCOME and EXPENSE transactions are considered; TRANSFER is excluded to avoid "
