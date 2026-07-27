@@ -35,6 +35,18 @@ public class SecurityConfig {
             "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**"};
     private static final String[] PUBLIC_AUTH_PATHS = {"/api/v1/auth/login"};
 
+    /**
+     * Builds the default HTTP security filter chain: disables CSRF, allows session creation
+     * when required (for the OAuth2 login form), permits public access to the documentation
+     * and login/registration endpoints, requires authentication for every other request,
+     * enables form login, and installs the JWT authentication filter before
+     * {@link UsernamePasswordAuthenticationFilter} and the debug-mode filter right after it.
+     *
+     * @param http       the {@link HttpSecurity} builder to configure
+     * @param jwtService the service used by {@link JwtAuthenticationFilter} to verify bearer tokens
+     * @return the built {@link SecurityFilterChain}
+     * @throws Exception if the security configuration cannot be built
+     */
     @Bean
     @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
