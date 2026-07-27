@@ -8,12 +8,22 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Adapter implementing {@link TransactionRepository} on top of Spring Data JPA, translating between domain
+ * {@link Transaction} objects and {@link TransactionJpaEntity} instances via {@link TransactionJpaMapper}.
+ */
 @Repository
 public class TransactionRepositoryAdapter implements TransactionRepository {
 
     private final TransactionJpaRepository jpaRepository;
     private final TransactionJpaMapper mapper;
 
+    /**
+     * Creates the adapter.
+     *
+     * @param jpaRepository the underlying Spring Data JPA repository
+     * @param mapper mapper used to convert between domain and persistence representations
+     */
     public TransactionRepositoryAdapter(TransactionJpaRepository jpaRepository, TransactionJpaMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
