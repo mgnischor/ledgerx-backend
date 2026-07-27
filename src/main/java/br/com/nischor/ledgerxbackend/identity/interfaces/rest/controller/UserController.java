@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST endpoint for user registration, role management and account deactivation.
+ */
 @RestController
 @RequestMapping("/api/v1/users")
 @Tag(name = "Users", description = "User registration, role management and account lifecycle")
@@ -32,6 +35,13 @@ public class UserController {
     private final GrantRoleUseCase grantRoleUseCase;
     private final DeactivateUserUseCase deactivateUserUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param registerUserUseCase   the use case used to register new users.
+     * @param grantRoleUseCase      the use case used to grant roles to existing users.
+     * @param deactivateUserUseCase the use case used to deactivate existing users.
+     */
     public UserController(RegisterUserUseCase registerUserUseCase, GrantRoleUseCase grantRoleUseCase,
             DeactivateUserUseCase deactivateUserUseCase) {
         this.registerUserUseCase = registerUserUseCase;
@@ -43,6 +53,9 @@ public class UserController {
      * BR-001..BR-018: full name, email and password shape/uniqueness/strength rules are
      * enforced by {@link CreateUserRequest}'s bean validation constraints before this method
      * body runs.
+     *
+     * @param request the new user's attributes.
+     * @return 201 Created with the newly created user.
      */
     @Operation(summary = "Register a new user",
             description = "Creates a user with a strong, Argon2id-hashed password. BR-001..BR-018.")
@@ -61,6 +74,10 @@ public class UserController {
      * BR-019/BR-020: the target user must exist and the role must be one of the roles defined
      * by the {@code Role} enum (an unknown role value is rejected by Jackson before this method
      * runs, returning 400 Bad Request).
+     *
+     * @param userId  the identifier of the user to update.
+     * @param request the role to grant.
+     * @return 200 OK with the updated user.
      */
     @Operation(summary = "Grant a role to a user", description = "BR-019/BR-020.")
     @ApiResponse(responseCode = "200", description = "Role granted")
@@ -71,7 +88,12 @@ public class UserController {
         return ResponseEntity.ok(grantRoleUseCase.execute(userId, request.role()));
     }
 
-    /** BR-021/BR-022: the target user must exist; deactivating twice is a no-op. */
+    /**
+     * BR-021/BR-022: the target user must exist; deactivating twice is a no-op.
+     *
+     * @param userId the identifier of the user to deactivate.
+     * @return 200 OK with the updated user.
+     */
     @Operation(summary = "Deactivate a user", description = "Idempotent. BR-021/BR-022.")
     @ApiResponse(responseCode = "200", description = "User deactivated")
     @ApiResponse(responseCode = "404", description = "User not found",
