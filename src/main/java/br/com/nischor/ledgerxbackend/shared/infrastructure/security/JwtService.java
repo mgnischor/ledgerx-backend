@@ -39,11 +39,27 @@ public class JwtService {
     private final JwtProperties properties;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Creates a new JWT service using the given signing key pair and configuration.
+     *
+     * @param keyPair    the Ed25519 key pair used for signing (private key) and verifying (public key) tokens
+     * @param properties the JWT configuration (issuer, expiration)
+     */
     public JwtService(KeyPair keyPair, JwtProperties properties) {
         this.keyPair = keyPair;
         this.properties = properties;
     }
 
+    /**
+     * Issues a new compact JWS token signed with Ed25519 (EdDSA), embedding the given subject,
+     * roles and permissions along with the configured issuer and an expiration computed from
+     * {@link JwtProperties#getExpirationSeconds()}.
+     *
+     * @param subject     the subject (typically the user identifier) to embed in the {@code sub} claim
+     * @param roles       the roles to embed in the {@code roles} claim
+     * @param permissions the permissions to embed in the {@code permissions} claim
+     * @return the compact, Base64url-encoded, dot-separated JWS token
+     */
     public String issue(String subject, Set<String> roles, Set<String> permissions) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plusSeconds(properties.getExpirationSeconds());
@@ -65,6 +81,16 @@ public class JwtService {
         return signingInput + "." + signature;
     }
 
+    /**
+     * Verifies and decodes a compact JWS token: checks that it has exactly three dot-separated
+     * segments, verifies the Ed25519 signature over the header/payload, checks that it has not
+     * expired, and checks that the {@code iss} claim matches the configured issuer.
+     *
+     * @param token the compact JWS token to verify
+     * @return the decoded {@link JwtClaims} extracted from the token payload
+     * @throws InvalidJwtException if the token is malformed, has an invalid signature,
+     *                              has expired, or was issued by an unexpected issuer
+     */
     public JwtClaims verify(String token) {
         String[] parts = token.split("\\.", -1);
         if (parts.length != 3) {
@@ -96,6 +122,14 @@ public class JwtService {
         return new JwtClaims(subject, roles, permissions);
     }
 
+    /**
+     * Signs the given signing input (header and payload, dot-separated) using the Ed25519
+     * private key.
+     *
+     * @param signingInput the ASCII signing input to sign
+     * @return the raw Ed25519 signature bytes
+     * @throws IllegalStateException if signing fails due to a security provider error
+     */
     private byte[] sign(String signingInput) {
         try {
             Signature signature = Signature.getInstance(JCA_ALGORITHM);
@@ -107,6 +141,14 @@ public class JwtService {
         }
     }
 
+    /**
+     * Verifies the given Ed25519 signature against the signing input using the public key.
+     *
+     * @param signingInput   the ASCII signing input (header and payload, dot-separated)
+     * @param signatureBytes the raw signature bytes to verify
+     * @return {@code true} if the signature is valid for the given input, {@code false} otherwise
+     * @throws InvalidJwtException if verification fails due to a security provider error
+     */
     private boolean isSignatureValid(String signingInput, byte[] signatureBytes) {
         try {
             Signature signature = Signature.getInstance(JCA_ALGORITHM);
@@ -118,6 +160,13 @@ public class JwtService {
         }
     }
 
+    /**
+     * Serializes the given claims map to JSON and Base64url-encodes it (without padding).
+     *
+     * @param segment the header or payload map to encode
+     * @return the Base64url-encoded JSON representation of {@code segment}
+     * @throws IllegalStateException if the segment cannot be serialized
+     */
     private String encodeSegment(Map<String, Object> segment) {
         try {
             return URL_ENCODER.encodeToString(objectMapper.writeValueAsBytes(segment));
@@ -126,6 +175,13 @@ public class JwtService {
         }
     }
 
+    /**
+     * Base64url-decodes the given segment and parses it as a JSON claims map.
+     *
+     * @param segment the Base64url-encoded JSON segment to decode
+     * @return the decoded claims map
+     * @throws InvalidJwtException if the segment cannot be decoded or parsed as JSON
+     */
     private Map<String, Object> decodeSegment(String segment) {
         try {
             return objectMapper.readValue(URL_DECODER.decode(segment), new TypeReference<Map<String, Object>>() {
