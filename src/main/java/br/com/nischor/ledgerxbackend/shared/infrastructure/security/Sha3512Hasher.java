@@ -15,10 +15,24 @@ public class Sha3512Hasher {
 
     private static final String ALGORITHM = "SHA3-512";
 
+    /**
+     * Hashes the given string using SHA3-512 after encoding it as UTF-8.
+     *
+     * @param value the string value to hash
+     * @return the lower-case hexadecimal representation of the SHA3-512 digest
+     * @throws IllegalStateException if the SHA3-512 algorithm is not available on this JVM
+     */
     public String hash(String value) {
         return hash(value.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Hashes the given raw bytes using SHA3-512.
+     *
+     * @param value the raw bytes to hash
+     * @return the lower-case hexadecimal representation of the SHA3-512 digest
+     * @throws IllegalStateException if the SHA3-512 algorithm is not available on this JVM
+     */
     public String hash(byte[] value) {
         try {
             var digest = MessageDigest.getInstance(ALGORITHM).digest(value);
