@@ -69,3 +69,11 @@ ledgerx:
       full-name: ${BOOTSTRAP_ADMIN_FULL_NAME:System Administrator}
       email: ${BOOTSTRAP_ADMIN_EMAIL:admin@ledgerx.local}
       password: ${BOOTSTRAP_ADMIN_PASSWORD:ChangeMe@2026}
+  observability:
+    grafana:
+      # Location of the Grafana instance queried by GET /api/v1/developer for its version.
+      # Defaults match the grafana-lgtm service name/port in compose.yaml. See GrafanaProperties.
+      scheme: ${GRAFANA_SCHEME:http}
+      host: ${GRAFANA_HOST:grafana-lgtm}
+      port: ${GRAFANA_PORT:3000}
+
