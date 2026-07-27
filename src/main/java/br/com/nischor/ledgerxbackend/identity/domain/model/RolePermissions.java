@@ -32,10 +32,22 @@ public final class RolePermissions {
     private RolePermissions() {
     }
 
+    /**
+     * Returns the permissions granted to a single role.
+     *
+     * @param role the role to look up.
+     * @return the set of permissions carried by {@code role}.
+     */
     public static Set<Permission> of(Role role) {
         return PERMISSIONS_BY_ROLE.get(role);
     }
 
+    /**
+     * Returns the union of permissions granted across a set of roles.
+     *
+     * @param roles the roles to look up.
+     * @return the combined set of permissions carried by all of {@code roles}.
+     */
     public static Set<Permission> of(Set<Role> roles) {
         Set<Permission> permissions = EnumSet.noneOf(Permission.class);
         roles.forEach(role -> permissions.addAll(of(role)));
