@@ -16,10 +16,20 @@ public class UserRegisteredEventPublisher {
 
     private final AmqpTemplate amqpTemplate;
 
+    /**
+     * Creates the publisher.
+     *
+     * @param amqpTemplate the template used to send messages to RabbitMQ.
+     */
     public UserRegisteredEventPublisher(AmqpTemplate amqpTemplate) {
         this.amqpTemplate = amqpTemplate;
     }
 
+    /**
+     * Forwards a {@link UserRegisteredEvent} to the {@code ledgerx.events} exchange.
+     *
+     * @param event the event to forward.
+     */
     @EventListener
     public void onUserRegistered(UserRegisteredEvent event) {
         amqpTemplate.convertAndSend(RabbitMqConfig.EVENTS_EXCHANGE, RabbitMqConfig.ROUTING_KEY_USER_REGISTERED,
