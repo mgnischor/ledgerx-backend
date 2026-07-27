@@ -11,6 +11,10 @@ import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 
+/**
+ * Configures the application's password hashing strategy via a {@link DelegatingPasswordEncoder},
+ * preferring Argon2id when available at runtime and gracefully falling back to PBKDF2 otherwise.
+ */
 @Configuration
 public class PasswordEncoderConfig {
 
@@ -19,6 +23,14 @@ public class PasswordEncoderConfig {
     private static final String ARGON2ID_ID = "argon2id";
     private static final String PBKDF2_ID = "pbkdf2";
 
+    /**
+     * Builds a {@link DelegatingPasswordEncoder} registering both PBKDF2 and, if usable in this
+     * environment, Argon2id encoders. Availability of Argon2id is verified by attempting to encode
+     * a probe value at startup; if that fails (e.g. missing native support), PBKDF2 is used as the
+     * default encoder instead and a warning is logged.
+     *
+     * @return the configured {@link PasswordEncoder}, defaulting to Argon2id when available
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         var pbkdf2 = Pbkdf2PasswordEncoder.defaultsForSpringSecurity_v5_8();
