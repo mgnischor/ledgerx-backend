@@ -22,6 +22,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing the endpoint used to record income and expense transactions against a financial
+ * account.
+ */
 @RestController
 @RequestMapping("/api/v1/transactions")
 @Tag(name = "Transactions", description = "Income and expense transactions recorded against a financial account")
@@ -29,6 +33,11 @@ public class TransactionController {
 
     private final RecordTransactionUseCase recordTransactionUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param recordTransactionUseCase use case used to record a transaction
+     */
     public TransactionController(RecordTransactionUseCase recordTransactionUseCase) {
         this.recordTransactionUseCase = recordTransactionUseCase;
     }
@@ -38,6 +47,10 @@ public class TransactionController {
      * description length are enforced by {@link CreateTransactionRequest}'s bean validation
      * constraints. BR-055: TRANSFER is rejected here explicitly since transfers must move
      * through {@code POST /api/v1/transfers} instead, so both legs are updated atomically.
+     *
+     * @param request the transaction creation payload
+     * @return the recorded transaction wrapped in a 201 response
+     * @throws BusinessRuleViolationException if the requested transaction type is {@code TRANSFER}
      */
     @Operation(summary = "Record an income or expense transaction",
             description = "TRANSFER type is rejected here; use POST /api/v1/transfers instead. BR-045..BR-057.")
