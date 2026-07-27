@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing endpoints to create and list transaction categories for a company.
+ */
 @RestController
 @RequestMapping("/api/v1/companies/{companyId}/categories")
 @Tag(name = "Categories", description = "Income/expense categories used to classify transactions")
@@ -34,6 +37,13 @@ public class CategoryController {
     private final CategoryMapper categoryMapper;
     private final CreateCategoryUseCase createCategoryUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param categoryRepository repository used to list categories
+     * @param categoryMapper mapper used to convert categories into DTOs
+     * @param createCategoryUseCase use case used to create a category
+     */
     public CategoryController(CategoryRepository categoryRepository, CategoryMapper categoryMapper,
             CreateCategoryUseCase createCategoryUseCase) {
         this.categoryRepository = categoryRepository;
@@ -41,7 +51,13 @@ public class CategoryController {
         this.createCategoryUseCase = createCategoryUseCase;
     }
 
-    /** BR-043/BR-044: name is required (max 60 chars) and type must be INCOME, EXPENSE or TRANSFER. */
+    /**
+     * BR-043/BR-044: name is required (max 60 chars) and type must be INCOME, EXPENSE or TRANSFER.
+     *
+     * @param companyId the identifier of the company the category belongs to
+     * @param request the category creation payload
+     * @return the created category wrapped in a 201 response
+     */
     @Operation(summary = "Create a category", description = "BR-043/BR-044.")
     @ApiResponse(responseCode = "201", description = "Category created")
     @ApiResponse(responseCode = "400", description = "Validation failure (blank name, missing type, etc.)",
@@ -54,6 +70,12 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    /**
+     * Lists all categories belonging to a company.
+     *
+     * @param companyId the identifier of the company
+     * @return the list of categories as DTOs
+     */
     @Operation(summary = "List categories of a company")
     @ApiResponse(responseCode = "200", description = "Categories listed")
     @PreAuthorize(Authorizations.READ)
