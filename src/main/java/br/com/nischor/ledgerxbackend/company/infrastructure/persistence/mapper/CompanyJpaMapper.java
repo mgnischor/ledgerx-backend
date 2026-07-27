@@ -7,9 +7,19 @@ import br.com.nischor.ledgerxbackend.company.infrastructure.persistence.entity.C
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.DocumentNumber;
 import org.springframework.stereotype.Component;
 
+/**
+ * Converts between {@link Company} domain entities and {@link CompanyJpaEntity} persistence
+ * entities, including their embedded address representations.
+ */
 @Component
 public class CompanyJpaMapper {
 
+    /**
+     * Converts a JPA entity into its domain representation, preserving the active status.
+     *
+     * @param entity the persistence entity to convert
+     * @return the corresponding domain company
+     */
     public Company toDomain(CompanyJpaEntity entity) {
         var address = new Address(entity.getAddress().getStreet(), entity.getAddress().getNumber(),
                 entity.getAddress().getCity(), entity.getAddress().getState(), entity.getAddress().getZipCode(),
@@ -22,6 +32,12 @@ public class CompanyJpaMapper {
         return company;
     }
 
+    /**
+     * Converts a domain company into its JPA persistence representation.
+     *
+     * @param company the domain company to convert
+     * @return the corresponding persistence entity
+     */
     public CompanyJpaEntity toEntity(Company company) {
         var address = company.getAddress();
         var embeddable = new AddressEmbeddable(address.street(), address.number(), address.city(), address.state(),
