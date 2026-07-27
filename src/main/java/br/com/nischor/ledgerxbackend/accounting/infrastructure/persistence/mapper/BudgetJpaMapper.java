@@ -7,9 +7,18 @@ import java.time.YearMonth;
 import java.util.Currency;
 import org.springframework.stereotype.Component;
 
+/**
+ * Converts between {@link Budget} domain objects and {@link BudgetJpaEntity} persistence entities.
+ */
 @Component
 public class BudgetJpaMapper {
 
+    /**
+     * Converts a persistence entity into its domain representation.
+     *
+     * @param entity the JPA entity to convert
+     * @return the resulting {@link Budget}, deactivated if the entity is not active
+     */
     public Budget toDomain(BudgetJpaEntity entity) {
         var limit = new Money(entity.getLimitAmount(), Currency.getInstance(entity.getCurrencyCode()));
         var period = YearMonth.of(entity.getPeriodYear(), entity.getPeriodMonth());
@@ -20,6 +29,12 @@ public class BudgetJpaMapper {
         return budget;
     }
 
+    /**
+     * Converts a domain object into its persistence representation.
+     *
+     * @param budget the domain budget to convert
+     * @return the resulting {@link BudgetJpaEntity}
+     */
     public BudgetJpaEntity toEntity(Budget budget) {
         var entity = new BudgetJpaEntity(budget.getId(), budget.getCompanyId(), budget.getCategoryId(),
                 budget.getPeriod().getYear(), budget.getPeriod().getMonthValue(), budget.getLimit().amount(),
