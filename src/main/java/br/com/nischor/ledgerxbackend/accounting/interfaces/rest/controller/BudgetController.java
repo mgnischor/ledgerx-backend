@@ -30,6 +30,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller exposing endpoints to create, list, inspect, and deactivate monthly budgets for a company's
+ * expense categories.
+ */
 @RestController
 @RequestMapping("/api/v1/companies/{companyId}/budgets")
 @Tag(name = "Budgets", description = "Monthly spending limits set per expense category")
@@ -41,6 +45,15 @@ public class BudgetController {
     private final GetBudgetStatusUseCase getBudgetStatusUseCase;
     private final DeactivateBudgetUseCase deactivateBudgetUseCase;
 
+    /**
+     * Creates the controller.
+     *
+     * @param budgetRepository repository used to list budgets
+     * @param budgetMapper mapper used to convert budgets into DTOs
+     * @param createBudgetUseCase use case used to create a budget
+     * @param getBudgetStatusUseCase use case used to compute a budget's spending status
+     * @param deactivateBudgetUseCase use case used to deactivate a budget
+     */
     public BudgetController(BudgetRepository budgetRepository, BudgetMapper budgetMapper,
             CreateBudgetUseCase createBudgetUseCase, GetBudgetStatusUseCase getBudgetStatusUseCase,
             DeactivateBudgetUseCase deactivateBudgetUseCase) {
@@ -56,6 +69,10 @@ public class BudgetController {
      * positive. BR-103: the referenced category must exist (404 otherwise). BR-104: budgets can
      * only be set for EXPENSE categories. BR-105: only one budget may exist per company, category
      * and period.
+     *
+     * @param companyId the identifier of the company the budget belongs to
+     * @param request the budget creation payload
+     * @return the created budget wrapped in a 201 response
      */
     @Operation(summary = "Create a monthly budget for an expense category", description = "BR-101..BR-105.")
     @ApiResponse(responseCode = "201", description = "Budget created")
@@ -75,6 +92,12 @@ public class BudgetController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    /**
+     * Lists all budgets belonging to a company.
+     *
+     * @param companyId the identifier of the company
+     * @return the list of budgets as DTOs
+     */
     @Operation(summary = "List budgets of a company")
     @ApiResponse(responseCode = "200", description = "Budgets listed")
     @PreAuthorize(Authorizations.READ)
@@ -83,7 +106,13 @@ public class BudgetController {
         return budgetRepository.findAllByCompanyId(companyId).stream().map(budgetMapper::toDto).toList();
     }
 
-    /** BR-106: status is computed from EXPENSE transactions recorded in the budget's category and period. */
+    /**
+     * BR-106: status is computed from EXPENSE transactions recorded in the budget's category and period.
+     *
+     * @param companyId the identifier of the company the budget belongs to
+     * @param budgetId the identifier of the budget to evaluate
+     * @return the budget's spending status
+     */
     @Operation(summary = "Get how much of a budget has been spent so far", description = "BR-106.")
     @ApiResponse(responseCode = "200", description = "Budget status computed")
     @ApiResponse(responseCode = "404", description = "Budget not found",
@@ -94,6 +123,13 @@ public class BudgetController {
         return getBudgetStatusUseCase.execute(budgetId);
     }
 
+    /**
+     * Deactivates a budget.
+     *
+     * @param companyId the identifier of the company the budget belongs to
+     * @param budgetId the identifier of the budget to deactivate
+     * @return the deactivated budget as a DTO
+     */
     @Operation(summary = "Deactivate a budget")
     @ApiResponse(responseCode = "200", description = "Budget deactivated")
     @ApiResponse(responseCode = "404", description = "Budget not found",
