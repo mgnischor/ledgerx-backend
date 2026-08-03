@@ -2,16 +2,14 @@ package br.com.nischor.ledgerxbackend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
  * Entry point for the LedgerX Backend Spring Boot application.
  *
- * <p>Bootstraps the Spring application context and enables JPA auditing
- * (e.g. automatic population of created/modified timestamps on entities).
+ * <p>Bootstraps the Spring application context. JPA auditing is enabled separately by
+ * {@link br.com.nischor.ledgerxbackend.shared.infrastructure.persistence.JpaAuditingConfig}.
  */
 @SpringBootApplication
-@EnableJpaAuditing
 public class LedgerxBackendApplication {
 
     /**
