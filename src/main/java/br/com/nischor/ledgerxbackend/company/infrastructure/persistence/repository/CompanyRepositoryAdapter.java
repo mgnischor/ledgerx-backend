@@ -4,6 +4,7 @@ import br.com.nischor.ledgerxbackend.company.domain.model.Company;
 import br.com.nischor.ledgerxbackend.company.domain.repository.CompanyRepository;
 import br.com.nischor.ledgerxbackend.company.infrastructure.persistence.mapper.CompanyJpaMapper;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.DocumentNumber;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
@@ -68,5 +69,13 @@ public class CompanyRepositoryAdapter implements CompanyRepository {
     @Override
     public long count() {
         return jpaRepository.count();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Company> findAll() {
+        return jpaRepository.findAll().stream().map(mapper::toDomain).toList();
     }
 }
