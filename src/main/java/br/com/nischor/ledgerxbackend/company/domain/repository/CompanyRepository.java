@@ -2,6 +2,7 @@ package br.com.nischor.ledgerxbackend.company.domain.repository;
 
 import br.com.nischor.ledgerxbackend.company.domain.model.Company;
 import br.com.nischor.ledgerxbackend.shared.domain.valueobject.DocumentNumber;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,4 +50,11 @@ public interface CompanyRepository {
      * @return the number of companies
      */
     long count();
+
+    /**
+     * Retrieves every registered company.
+     *
+     * @return all companies, in no particular order
+     */
+    List<Company> findAll();
 }
