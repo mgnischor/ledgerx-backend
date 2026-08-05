@@ -2,6 +2,7 @@ package br.com.nischor.ledgerxbackend.company.interfaces.rest.controller;
 
 import br.com.nischor.ledgerxbackend.company.application.dto.CompanyDto;
 import br.com.nischor.ledgerxbackend.company.application.usecase.DeactivateCompanyUseCase;
+import br.com.nischor.ledgerxbackend.company.application.usecase.ListCompaniesUseCase;
 import br.com.nischor.ledgerxbackend.company.application.usecase.RegisterCompanyUseCase;
 import br.com.nischor.ledgerxbackend.company.domain.valueobject.Address;
 import br.com.nischor.ledgerxbackend.company.interfaces.rest.dto.CreateCompanyRequest;
@@ -13,10 +14,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,17 +38,37 @@ public class CompanyController {
 
     private final RegisterCompanyUseCase registerCompanyUseCase;
     private final DeactivateCompanyUseCase deactivateCompanyUseCase;
+    private final ListCompaniesUseCase listCompaniesUseCase;
 
     /**
      * Creates the controller with its required use cases.
      *
      * @param registerCompanyUseCase use case handling company registration
      * @param deactivateCompanyUseCase use case handling company deactivation
+     * @param listCompaniesUseCase use case handling company listing
      */
     public CompanyController(RegisterCompanyUseCase registerCompanyUseCase,
-            DeactivateCompanyUseCase deactivateCompanyUseCase) {
+            DeactivateCompanyUseCase deactivateCompanyUseCase, ListCompaniesUseCase listCompaniesUseCase) {
         this.registerCompanyUseCase = registerCompanyUseCase;
         this.deactivateCompanyUseCase = deactivateCompanyUseCase;
+        this.listCompaniesUseCase = listCompaniesUseCase;
+    }
+
+    /**
+     * Handles {@code GET /api/v1/companies} to list every registered company.
+     *
+     * <p>Companies have no per-user membership: any caller with read access sees every company,
+     * so this is how the frontend gives an authorized user (e.g. a DEVELOPER/ADMINISTRATOR)
+     * universal access across all tenants.
+     *
+     * @return a {@code 200 OK} response with every company as a {@link CompanyDto}
+     */
+    @Operation(summary = "List all companies")
+    @ApiResponse(responseCode = "200", description = "Companies listed")
+    @PreAuthorize(Authorizations.READ)
+    @GetMapping
+    public ResponseEntity<List<CompanyDto>> list() {
+        return ResponseEntity.ok(listCompaniesUseCase.execute());
     }
 
     /**
